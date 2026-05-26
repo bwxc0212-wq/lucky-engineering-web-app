@@ -73,6 +73,18 @@
     .login-error { display:none; background:#fee2e2; color:#991b1b; border:1px solid #fecaca; border-radius:12px; padding:10px; font-weight:700; margin-bottom:10px; }
 
     @media(max-width:1000px) { .app { grid-template-columns:1fr; } aside { height:auto; position:relative; } nav { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; } main { padding:14px; } .grid-2,.grid-3,.grid-4,.invoice-meta { grid-template-columns:1fr; } }
+
+    /* Mobile/click fix: keep form buttons above invoice preview */
+    #invoices .no-print { position:relative; z-index:20; }
+    #invoices .card { position:relative; z-index:21; }
+    #invoices button, #invoices select, #invoices input { position:relative; z-index:22; }
+    #invoicePaper { position:relative; z-index:1; margin-top:18px; clear:both; }
+    @media(max-width:1000px) {
+      #invoices .no-print { display:block; }
+      #invoices .no-print > .card { margin-bottom:14px; }
+      .invoice-paper { overflow-x:auto; }
+    }
+
     @media print { body { background:white; } aside,.topbar,.no-print,.modal { display:none!important; } .app { display:block; } main { padding:0; } .section { display:none!important; } #invoices { display:block!important; } .invoice-paper { border:0; width:100%; padding:0; } @page { size:A4; margin:10mm; } }
   </style>
 </head>
@@ -332,12 +344,22 @@ function show(id, btn) {
   const titles={dashboard:["Dashboard","Online data connected to Supabase."],customers:["Customers","Add and manage unlimited customers."],stock:["Stock","Manage inventory, cost, selling price and low stock alerts."],invoices:["Invoices","Create professional invoices and reduce stock automatically."],accounts:["Accounts","Track income, expenses and profit."],users:["Users","Manage system users and roles."],settings:["Settings","Update company details and invoice settings."]};
   pageTitle.textContent=titles[id][0]; pageSub.textContent=titles[id][1];
 }
+function invoiceNumberValue(no) {
+  const n = parseInt(String(no || "").split("/").pop(), 10);
+  return isNaN(n) ? 0 : n;
+}
+function formatInvoiceNo(n) {
+  return company.prefix + "/" + String(Math.max(1, Number(n || 1))).padStart(5, "0");
+}
 function nextNo() {
-  const max = state.invoices.reduce((m,i)=> {
-    const n = parseInt(String(i.invoice_no||"").split("/").pop(),10);
-    return isNaN(n) ? m : Math.max(m,n);
-  }, 0) + 1;
-  return company.prefix + "/" + String(max).padStart(5,"0");
+  const maxFromDb = state.invoices.reduce((m, i) => Math.max(m, invoiceNumberValue(i.invoice_no)), 0);
+  const maxFromCurrent = invoiceNumberValue(invoice.no);
+  return formatInvoiceNo(Math.max(maxFromDb, maxFromCurrent) + 1);
+}
+function nextNoAfter(savedNo) {
+  const savedNumber = invoiceNumberValue(savedNo);
+  const maxFromDb = state.invoices.reduce((m, i) => Math.max(m, invoiceNumberValue(i.invoice_no)), 0);
+  return formatInvoiceNo(Math.max(maxFromDb, savedNumber) + 1);
 }
 function newInvoice(render=true) {
   invoice={no:nextNo(), customer_id:state.customers[0]?.id||"", invoice_date:today(), due_date:today(), paid_amount:0, items:[]};
@@ -431,8 +453,12 @@ async function saveInvoice() {
     }
   }
   if(t.paid>0) await api(()=>db.from("transactions").insert({type:"Income", category:"Invoice Payment", description:invoice.no, amount:t.paid, transaction_date:invoice.invoice_date}));
+  const savedInvoiceNo = invoice.no;
   alert("Invoice saved online and stock reduced.");
-  await loadAll(); newInvoice();
+  await loadAll();
+  invoice = {no: nextNoAfter(savedInvoiceNo), customer_id: state.customers[0]?.id || "", invoice_date: today(), due_date: today(), paid_amount: 0, items: []};
+  syncInvoiceInputs();
+  renderInvoicePaper();
 }
 function renderInvoiceHistory() {
   const q=(invoiceSearch?.value||"").toLowerCase();
