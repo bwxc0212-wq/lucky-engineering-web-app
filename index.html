@@ -751,6 +751,150 @@
       .invoice-paper { border-radius:18px !important; }
     }
 
+  
+    /* FINAL A4 FULL-PAGE INVOICE SIZE OVERRIDE */
+    @media print {
+      html, body {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        overflow: visible !important;
+      }
+      .invoice-paper {
+        width: 190mm !important;
+        min-height: 277mm !important;
+        max-height: none !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        transform: none !important;
+        font-size: 13px !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-inside: avoid !important;
+      }
+      .invoice-head {
+        padding: 22px 24px 18px !important;
+        grid-template-columns: 125px 1fr !important;
+      }
+      .invoice-head img {
+        width: 112px !important;
+        height: 92px !important;
+      }
+      .invoice-head h1 {
+        font-size: 28px !important;
+      }
+      .invoice-title {
+        font-size: 18px !important;
+        letter-spacing: 7px !important;
+        margin: 6px 0 !important;
+      }
+      .invoice-meta {
+        padding: 18px 24px 12px !important;
+        gap: 14px !important;
+        font-size: 12.5px !important;
+      }
+      .invoice-meta > div {
+        padding: 12px !important;
+      }
+      .line {
+        margin: 4px 0 !important;
+        grid-template-columns: 120px 10px 1fr !important;
+      }
+      .invoice-paper table {
+        width: calc(100% - 48px) !important;
+        margin: 16px 24px !important;
+      }
+      .invoice-paper table th,
+      .invoice-paper table td {
+        padding: 8px !important;
+        font-size: 12px !important;
+      }
+      .invoice-summary {
+        width: 330px !important;
+        margin-right: 24px !important;
+      }
+      .invoice-paper > div[style*="margin"] {
+        margin: 14px 24px !important;
+        padding: 12px !important;
+        font-size: 12px !important;
+      }
+      .footer {
+        margin: 26px 24px 0 !important;
+        font-size: 11.5px !important;
+      }
+      .signatures {
+        margin: 52px 24px 22px !important;
+        font-size: 12px !important;
+        gap: 14px !important;
+      }
+    }
+
+    .pdf-mode.invoice-paper {
+      width: 190mm !important;
+      min-height: 277mm !important;
+      max-height: none !important;
+      overflow: visible !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      transform: none !important;
+      font-size: 13px !important;
+    }
+    .pdf-mode .invoice-head {
+      padding: 22px 24px 18px !important;
+      grid-template-columns: 125px 1fr !important;
+    }
+    .pdf-mode .invoice-head img {
+      width: 112px !important;
+      height: 92px !important;
+    }
+    .pdf-mode .invoice-head h1 {
+      font-size: 28px !important;
+    }
+    .pdf-mode .invoice-title {
+      font-size: 18px !important;
+      letter-spacing: 7px !important;
+      margin: 6px 0 !important;
+    }
+    .pdf-mode .invoice-meta {
+      padding: 18px 24px 12px !important;
+      gap: 14px !important;
+      font-size: 12.5px !important;
+    }
+    .pdf-mode .invoice-meta > div {
+      padding: 12px !important;
+    }
+    .pdf-mode .line {
+      margin: 4px 0 !important;
+      grid-template-columns: 120px 10px 1fr !important;
+    }
+    .pdf-mode table {
+      width: calc(100% - 48px) !important;
+      margin: 16px 24px !important;
+    }
+    .pdf-mode table th,
+    .pdf-mode table td {
+      padding: 8px !important;
+      font-size: 12px !important;
+    }
+    .pdf-mode .invoice-summary {
+      width: 330px !important;
+      margin-right: 24px !important;
+    }
+    .pdf-mode > div[style*="margin"] {
+      margin: 14px 24px !important;
+      padding: 12px !important;
+      font-size: 12px !important;
+    }
+    .pdf-mode .footer {
+      margin: 26px 24px 0 !important;
+      font-size: 11.5px !important;
+    }
+    .pdf-mode .signatures {
+      margin: 52px 24px 22px !important;
+      font-size: 12px !important;
+      gap: 14px !important;
+    }
+
   </style>
 </head>
 <body>
@@ -1502,7 +1646,7 @@ async function downloadInvoicePDF() {
   const invoiceNo = cleanFileName(invoice.no || "invoice");
   element.classList.add("pdf-mode");
   const opt = {
-    margin: [6, 6, 6, 6],
+    margin: [8, 8, 8, 8],
     filename: invoiceNo + ".pdf",
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
