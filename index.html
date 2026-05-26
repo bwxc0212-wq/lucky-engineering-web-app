@@ -1089,6 +1089,7 @@
             <div><label>Date</label><input id="invDate" type="date" onchange="renderInvoicePaper()"></div>
             <div><label>Due Date</label><input id="invDueDate" type="date" onchange="renderInvoicePaper()"></div>
             <div><label>Payment</label><input id="invPaid" type="number" value="0" oninput="renderInvoicePaper()"></div>
+            <div><label>Payment Status</label><button type="button" class="green" style="width:100%;justify-content:center" onclick="setInvoiceAlreadyPaid()">Already Paid / Full Paid</button></div>
             <div><label>Invoice Discount</label><input id="invDiscount" type="number" value="0" min="0" step="0.01" oninput="renderInvoicePaper()"></div>
           </div>
           <label>Add Item</label><select id="itemSelect"></select>
@@ -1129,9 +1130,8 @@
         <table><thead><tr><th>No</th><th>Code</th><th>Description</th><th class="right">Qty</th><th class="right">Unit Price</th><th class="right">Discount</th><th class="right">Total</th><th class="no-print">Action</th></tr></thead><tbody id="paperItems"></tbody></table>
         <table class="invoice-summary"><tr><td>Sub Total</td><td class="right" id="pSubTotal">0.00</td></tr><tr><td>Total Discount</td><td class="right" id="pDiscount">0.00</td></tr><tr><td>Total</td><td class="right" id="pTotal">0.00</td></tr><tr><td>Paid</td><td class="right" id="pPaid">0.00</td></tr><tr><td>Balance</td><td class="right" id="pBalance">0.00</td></tr></table>
         <div style="margin-top:12px"><b>Memo:</b> Received goods in good condition.</div>
-        <div style="margin: 10px 28px 0; font-weight: 900; color:#0f172a;">Thank you for your business.</div>
         <div class="footer">All cheque payments should be drawn in favor of "Lucky Engineering (Pvt) Ltd".</div>
-        <div class="signatures"><div>........................<br>Prepared By</div><div>........................<br>Authorized By</div><div>........................<br>Date</div><div>........................<br>Customer Signature</div></div>
+        <div class="signatures"><div>........................<br>Prepared By</div><div><img class="authorized-signature-img" style="display:none;max-width:95px;max-height:35px;margin:0 auto 3px;object-fit:contain">........................<br>Authorized By</div><div>........................<br>Date</div><div>........................<br>Customer Signature</div></div>
       </div>
     </section>
 
@@ -1248,6 +1248,14 @@
           <div><label>Export</label><button class="secondary" onclick="exportCSV()">Export CSV</button></div>
         </div>
       </div>
+      
+      <div class="grid grid-4" style="margin-top:15px">
+        <div class="card metric"><div><div class="label">Today Gross Profit</div><div class="value" id="todayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
+        <div class="card metric"><div><div class="label">Today Net Profit</div><div class="value" id="todayNetProfit">0.00</div></div><div class="icon">✅</div></div>
+        <div class="card metric"><div><div class="label">Month Gross Profit</div><div class="value" id="monthGrossProfit">0.00</div></div><div class="icon">📈</div></div>
+        <div class="card metric"><div><div class="label">Month Net Profit</div><div class="value" id="monthNetProfit">0.00</div></div><div class="icon">💰</div></div>
+      </div>
+
       <div class="grid grid-4" style="margin-top:15px">
         <div class="card metric"><div><div class="label">Period Sales</div><div class="value" id="repSales">0.00</div></div><div class="icon">💵</div></div>
         <div class="card metric"><div><div class="label">Period Payments</div><div class="value" id="repPayments">0.00</div></div><div class="icon">✅</div></div>
@@ -1303,7 +1311,8 @@
         <h3>Company Settings</h3>
         <p style="color:var(--muted)">Company settings are stored in this website file. Edit them here for preview. For permanent changes, update the code settings.</p>
         <div class="grid grid-2">
-          <div><label>Company Name</label><input id="setName"></div><div><label>Phone</label><input id="setPhone"></div><div><label>Email</label><input id="setEmail"></div><div><label>Invoice Prefix</label><input id="setPrefix"></div><div style="grid-column:1/-1"><label>Address</label><textarea id="setAddress"></textarea></div>
+          <div><label>Company Name</label><input id="setName"></div><div><label>Phone</label><input id="setPhone"></div><div><label>Email</label><input id="setEmail"></div><div><label>Invoice Prefix</label><input id="setPrefix"></div>
+          <div style="grid-column:1/-1"><label>Authorized Signature Image</label><input id="signatureUpload" type="file" accept="image/*" onchange="uploadSignature(event)"><small style="color:#64748b">Upload your signature image. It will appear above Authorized By on invoices.</small></div><div style="grid-column:1/-1"><label>Address</label><textarea id="setAddress"></textarea></div>
         </div>
         <button class="green" style="margin-top:12px" onclick="saveSettings()">Save Preview Settings</button>
       </div>
@@ -1457,21 +1466,38 @@ function show(id, btn) {
   pageTitle.textContent=titles[id][0]; pageSub.textContent=titles[id][1];
 }
 function invoiceNumberValue(no) {
-  const n = parseInt(String(no || "").split("/").pop(), 10);
+  const raw = String(no || "").trim();
+  if (/^\d+$/.test(raw)) return parseInt(raw, 10);
+  const n = parseInt(raw.split("/").pop(), 10);
   return isNaN(n) ? 0 : n;
 }
 function formatInvoiceNo(n) {
   return company.prefix + "/" + String(Math.max(1, Number(n || 1))).padStart(5, "0");
 }
+function getStoredInvoiceMax() {
+  return Number(localStorage.getItem("lucky_invoice_max_number") || 0);
+}
+function setStoredInvoiceMax(n) {
+  const current = getStoredInvoiceMax();
+  if (Number(n || 0) > current) localStorage.setItem("lucky_invoice_max_number", String(Number(n)));
+}
 function nextNo() {
   const maxFromDb = state.invoices.reduce((m, i) => Math.max(m, invoiceNumberValue(i.invoice_no)), 0);
+  const maxFromStored = getStoredInvoiceMax();
   const maxFromCurrent = invoiceNumberValue(invoice.no);
-  return formatInvoiceNo(Math.max(maxFromDb, maxFromCurrent) + 1);
+  return formatInvoiceNo(Math.max(maxFromDb, maxFromStored, maxFromCurrent) + 1);
 }
 function nextNoAfter(savedNo) {
   const savedNumber = invoiceNumberValue(savedNo);
+  setStoredInvoiceMax(savedNumber);
   const maxFromDb = state.invoices.reduce((m, i) => Math.max(m, invoiceNumberValue(i.invoice_no)), 0);
-  return formatInvoiceNo(Math.max(maxFromDb, savedNumber) + 1);
+  return formatInvoiceNo(Math.max(maxFromDb, getStoredInvoiceMax(), savedNumber) + 1);
+}
+function normalizeInvoiceNoInput() {
+  if (typeof invNo !== "undefined") {
+    const n = invoiceNumberValue(invNo.value);
+    if (n > 0 && /^\d+$/.test(String(invNo.value).trim())) invNo.value = formatInvoiceNo(n);
+  }
 }
 function newInvoice(render=true) {
   invoice={no:nextNo(), customer_id:state.customers[0]?.id||"", invoice_date:today(), due_date:today(), paid_amount:0, invoice_discount:0, items:[]};
@@ -1532,7 +1558,7 @@ function renderStock() {
 }
 
 function syncInvoiceInputs() { invNo.value=invoice.no; invDate.value=invoice.invoice_date; invDueDate.value=invoice.due_date; invPaid.value=invoice.paid_amount; if (typeof invDiscount !== "undefined") invDiscount.value=invoice.invoice_discount||0; invCustomer.value=invoice.customer_id; }
-function readInvoiceInputs() { invoice.no=invNo.value; invoice.invoice_date=invDate.value; invoice.due_date=invDueDate.value; invoice.paid_amount=Number(invPaid.value||0); invoice.invoice_discount=Number((typeof invDiscount !== "undefined" ? invDiscount.value : 0)||0); invoice.customer_id=invCustomer.value; }
+function readInvoiceInputs() { normalizeInvoiceNoInput(); invoice.no=invNo.value; invoice.invoice_date=invDate.value; invoice.due_date=invDueDate.value; invoice.paid_amount=Number(invPaid.value||0); invoice.invoice_discount=Number((typeof invDiscount !== "undefined" ? invDiscount.value : 0)||0); invoice.customer_id=invCustomer.value; }
 function addInvoiceItem() {
   const p=state.products.find(x=>x.id===itemSelect.value); if(!p) return;
   invoice.items.push({product_id:p.id, product_code:p.code, description:p.name, qty:1, unit_price:p.selling_price, cost_price:p.cost_price, discount:0});
@@ -1944,7 +1970,7 @@ async function downloadInvoicePDF() {
   doc.setFont("helvetica", "bold");
   doc.text("Memo:", margin + 4, memoY + 7);
   doc.setFont("helvetica", "normal");
-  doc.text("Received goods in good condition. Thank you for your business.", margin + 19, memoY + 7);
+  doc.text("Received goods in good condition. ", margin + 19, memoY + 7);
 
   // Footer/signatures
   const sigY = 262;
@@ -1952,6 +1978,12 @@ async function downloadInvoicePDF() {
   doc.setDrawColor(15, 23, 42);
   const sigs = ["Prepared By", "Authorized By", "Date", "Customer Signature"];
   const sigW = (pageW - margin * 2) / 4;
+  const savedSignature = localStorage.getItem("lucky_authorized_signature");
+  if (savedSignature) {
+    try {
+      doc.addImage(savedSignature, "PNG", margin + sigW + 12, sigY - 18, 32, 12);
+    } catch(e) {}
+  }
   sigs.forEach((s, i) => {
     const sx = margin + i * sigW + 8;
     doc.line(sx, sigY, sx + sigW - 18, sigY);
@@ -2080,6 +2112,73 @@ function shareInvoiceWhatsApp() {
   window.open("https://wa.me/?text=" + text, "_blank");
 }
 
+
+function setInvoiceAlreadyPaid() {
+  readInvoiceInputs();
+  const t = totals();
+  invPaid.value = Math.max(0, t.total).toFixed(2);
+  invoice.paid_amount = Number(invPaid.value || 0);
+  renderInvoicePaper();
+  showToast ? showToast("Invoice marked as already paid before saving.") : alert("Invoice marked as already paid before saving.");
+}
+
+function invoiceGrossProfit(inv) {
+  const items = state.invoiceItems.filter(x => x.invoice_id === inv.id);
+  let cost = 0;
+  items.forEach(i => cost += Number(i.qty || 0) * Number(i.cost_price || 0));
+  return Number(inv.total || 0) - cost;
+}
+
+function profitForDateRange(from, to) {
+  const invs = state.invoices.filter(i => {
+    const d = i.invoice_date || "";
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  });
+  const gross = invs.reduce((s, inv) => s + invoiceGrossProfit(inv), 0);
+  const expenses = state.transactions
+    .filter(t => t.type === "Expense")
+    .filter(t => {
+      const d = t.transaction_date || "";
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    })
+    .reduce((s, t) => s + Number(t.amount || 0), 0);
+  return { gross, expenses, net: gross - expenses };
+}
+
+function monthStart(dateText) {
+  const d = dateText || today();
+  return d.slice(0, 8) + "01";
+}
+
+function uploadSignature(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    localStorage.setItem("lucky_authorized_signature", reader.result);
+    renderSignature();
+    if (typeof showToast === "function") showToast("Authorized signature saved.");
+    else alert("Authorized signature saved.");
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderSignature() {
+  const data = localStorage.getItem("lucky_authorized_signature");
+  document.querySelectorAll(".authorized-signature-img").forEach(img => {
+    if (data) {
+      img.src = data;
+      img.style.display = "block";
+    } else {
+      img.style.display = "none";
+    }
+  });
+}
+
 async function markInvoicePaid(invoiceId) {
   const inv = state.invoices.find(i => i.id === invoiceId);
   if (!inv) return alert("Invoice not found.");
@@ -2162,7 +2261,15 @@ function renderReports() {
   repSales.textContent=money(invs.reduce((s,i)=>s+Number(i.total||0),0));
   repPayments.textContent=money(pays.reduce((s,p)=>s+Number(p.amount||0),0));
   repExpenses.textContent=money(exps.reduce((s,t)=>s+Number(t.amount||0),0));
-  repProfit.textContent=money(invs.reduce((s,i)=>s+Number(i.total||0),0)-exps.reduce((s,t)=>s+Number(t.amount||0),0));
+  const periodGross = invs.reduce((s,i)=>s+invoiceGrossProfit(i),0);
+  const periodExpenses = exps.reduce((s,t)=>s+Number(t.amount||0),0);
+  repProfit.textContent=money(periodGross-periodExpenses);
+  const todayProfit = profitForDateRange(today(), today());
+  const monthProfit = profitForDateRange(monthStart(today()), today());
+  if (typeof todayGrossProfit !== "undefined") todayGrossProfit.textContent = money(todayProfit.gross);
+  if (typeof todayNetProfit !== "undefined") todayNetProfit.textContent = money(todayProfit.net);
+  if (typeof monthGrossProfit !== "undefined") monthGrossProfit.textContent = money(monthProfit.gross);
+  if (typeof monthNetProfit !== "undefined") monthNetProfit.textContent = money(monthProfit.net);
   repOutstanding.innerHTML = state.invoices.filter(i=>Number(i.balance||0)>0).map(i=>{const c=state.customers.find(x=>x.id===i.customer_id)||{}; return `<tr><td><b>${html(i.invoice_no)}</b></td><td>${html(c.name||"")}</td><td class="right">${money(i.balance)}</td><td>${badge(i.status)}</td><td class="actions"><button class="quick-pay" onclick="markInvoicePaid('${i.id}')">Mark Paid</button><button class="secondary" onclick="markInvoicePartial('${i.id}')">Partial</button></td></tr>`}).join("") || `<tr><td colspan="5" class="center">No outstanding invoices</td></tr>`;
   repLowStock.innerHTML = state.products.filter(p=>Number(p.quantity)<=Number(p.min_quantity)).map(p=>`<tr><td>${html(p.code)}</td><td>${html(p.name)}</td><td class="right">${p.quantity}</td></tr>`).join("") || `<tr><td colspan="3" class="center">No low stock</td></tr>`;
 }
@@ -2211,7 +2318,7 @@ function renderDashboard() {
   lowStock.innerHTML = lows.length ? lows.map(p=>`<div><b>${html(p.code)}</b> - ${html(p.name)}: <span class="low">${p.quantity}</span> left</div>`).join("") : `<span class="muted">No low stock items.</span>`;
   recentInvoices.innerHTML = state.invoices.slice(0,6).map(inv=>{ const c=state.customers.find(x=>x.id===inv.customer_id)||{}; return `<tr><td>${html(inv.invoice_no)}</td><td>${html(c.name||"")}</td><td class="right">${money(inv.total)}</td><td>${badge(inv.status)}</td></tr>`; }).join("") || `<tr><td colspan="4" class="center">No invoices</td></tr>`;
 }
-function renderAll() { renderCustomers(); renderStock(); renderInvoicePaper(); renderInvoiceHistory(); renderQuotationPaper(); renderQuotationHistory(); renderReceiptPaper(); renderReceiptHistory(); renderPurchases(); renderReports(); renderLedger(); renderAccounts(); renderUsers(); renderSettings(); renderDashboard(); }
+function renderAll() { renderCustomers(); renderStock(); renderInvoicePaper(); renderInvoiceHistory(); renderQuotationPaper(); renderQuotationHistory(); renderReceiptPaper(); renderReceiptHistory(); renderPurchases(); renderReports(); renderLedger(); renderAccounts(); renderUsers(); renderSettings(); renderDashboard(); renderSignature(); }
 txDate.value=today();
 if (typeof purDate !== "undefined") purDate.value=today();
 if (typeof reportFrom !== "undefined") { reportFrom.value=today().slice(0,8)+"01"; reportTo.value=today(); }
