@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lucky Engineering Online System</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root { --bg:#f4f6f9; --card:#fff; --ink:#172033; --muted:#64748b; --line:#dbe3ef; --brand:#0f172a; --blue:#2563eb; --green:#059669; --red:#dc2626; --amber:#d97706; }
     * { box-sizing:border-box; }
@@ -270,6 +271,124 @@
       }
     }
 
+
+
+    /* One-page invoice print/PDF setup */
+    @media print {
+      body, html { width: 210mm; min-height: 297mm; overflow: hidden !important; }
+      .invoice-paper {
+        width: 190mm !important;
+        max-height: 277mm !important;
+        overflow: hidden !important;
+        transform-origin: top center;
+        page-break-after: avoid !important;
+        page-break-before: avoid !important;
+        page-break-inside: avoid !important;
+        font-size: 11px !important;
+      }
+      .invoice-head { padding: 12px 16px !important; grid-template-columns: 90px 1fr !important; }
+      .invoice-head img { width: 82px !important; height: 68px !important; }
+      .invoice-head h1 { font-size: 20px !important; }
+      .invoice-title { font-size: 13px !important; letter-spacing: 5px !important; margin: 3px 0 !important; }
+      .invoice-meta { padding: 10px 16px !important; gap: 10px !important; font-size: 11px !important; }
+      .invoice-meta > div { padding: 8px !important; }
+      .line { margin: 2px 0 !important; grid-template-columns: 90px 8px 1fr !important; }
+      .invoice-paper table { width: calc(100% - 32px) !important; margin: 10px 16px !important; }
+      .invoice-paper table th, .invoice-paper table td { padding: 5px !important; font-size: 10.5px !important; }
+      .invoice-summary { width: 260px !important; margin-right: 16px !important; }
+      .invoice-paper > div[style*="margin"] { margin: 8px 16px !important; padding: 8px !important; font-size: 10.5px !important; }
+      .footer { margin: 12px 16px 0 !important; font-size: 10px !important; }
+      .signatures { margin: 28px 16px 12px !important; font-size: 10.5px !important; gap: 8px !important; }
+    }
+    .pdf-mode.invoice-paper {
+      width: 190mm !important;
+      min-height: auto !important;
+      max-height: 277mm !important;
+      overflow: hidden !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      transform: none !important;
+    }
+    .pdf-mode .invoice-head { padding: 12px 16px !important; grid-template-columns: 90px 1fr !important; }
+    .pdf-mode .invoice-head img { width: 82px !important; height: 68px !important; }
+    .pdf-mode .invoice-head h1 { font-size: 20px !important; }
+    .pdf-mode .invoice-title { font-size: 13px !important; letter-spacing: 5px !important; margin: 3px 0 !important; }
+    .pdf-mode .invoice-meta { padding: 10px 16px !important; gap: 10px !important; font-size: 11px !important; }
+    .pdf-mode .invoice-meta > div { padding: 8px !important; }
+    .pdf-mode .line { margin: 2px 0 !important; grid-template-columns: 90px 8px 1fr !important; }
+    .pdf-mode table { width: calc(100% - 32px) !important; margin: 10px 16px !important; }
+    .pdf-mode table th, .pdf-mode table td { padding: 5px !important; font-size: 10.5px !important; }
+    .pdf-mode .invoice-summary { width: 260px !important; margin-right: 16px !important; }
+    .pdf-mode > div[style*="margin"] { margin: 8px 16px !important; padding: 8px !important; font-size: 10.5px !important; }
+    .pdf-mode .footer { margin: 12px 16px 0 !important; font-size: 10px !important; }
+    .pdf-mode .signatures { margin: 28px 16px 12px !important; font-size: 10.5px !important; gap: 8px !important; }
+
+    /* Modern motion and glass UI upgrade */
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(14px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+    @keyframes softPulse {
+      0%,100% { transform: scale(1); opacity:.9; }
+      50% { transform: scale(1.04); opacity:1; }
+    }
+    .section.active { animation: fadeUp .35s ease both; }
+    .card, .invoice-paper, .table-wrap { animation: fadeUp .38s ease both; }
+    main {
+      background:
+        radial-gradient(circle at 10% 0%, rgba(37,99,235,.10), transparent 24rem),
+        radial-gradient(circle at 85% 8%, rgba(5,150,105,.09), transparent 22rem);
+    }
+    .topbar {
+      position: sticky;
+      top: 12px;
+      z-index: 30;
+    }
+    .notice {
+      border-radius: 18px !important;
+      box-shadow: 0 12px 34px rgba(14,116,144,.08);
+    }
+    .metric {
+      overflow:hidden;
+      position:relative;
+    }
+    .metric::after {
+      content:"";
+      position:absolute;
+      right:-40px;
+      bottom:-45px;
+      width:120px;
+      height:120px;
+      border-radius:999px;
+      background:linear-gradient(135deg, rgba(37,99,235,.10), rgba(5,150,105,.08));
+      animation: softPulse 4s ease-in-out infinite;
+    }
+    .metric > * { position:relative; z-index:1; }
+    .status {
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.45);
+    }
+    .paid { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color:#14532d; }
+    .unpaid { background: linear-gradient(135deg,#fee2e2,#fecaca); color:#7f1d1d; }
+    .partial { background: linear-gradient(135deg,#fef3c7,#fde68a); color:#78350f; }
+    .table-wrap table tr { transition: background .15s ease; }
+    .table-wrap table tbody tr:hover { background:#f8fafc; }
+    .actions button, .toolbar button { white-space:nowrap; }
+    .quick-pay {
+      background: linear-gradient(135deg, #059669, #10b981) !important;
+      color:white !important;
+      box-shadow: 0 10px 22px rgba(5,150,105,.20);
+    }
+    .soft-card {
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(12px);
+      border:1px solid rgba(219,227,239,.78);
+    }
+    @media(max-width:1000px) {
+      .topbar { position: static; }
+      nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      nav button { justify-content:flex-start; }
+    }
+
     /* Mobile/click fix: keep form buttons above invoice preview */
     #invoices .no-print { position:relative; z-index:20; }
     #invoices .card { position:relative; z-index:21; }
@@ -282,9 +401,361 @@
     }
 
     @media print { body { background:white; } aside,.topbar,.no-print,.modal { display:none!important; } .app { display:block; } main { padding:0; } .section { display:none!important; } #invoices { display:block!important; } .invoice-paper { border:0; width:100%; padding:0; } @page { size:A4; margin:10mm; } }
+  
+    /* =========================
+       FINAL PREMIUM MODERN THEME
+       ========================= */
+    :root {
+      --bg:#eef4fb;
+      --card:rgba(255,255,255,.82);
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:rgba(203,213,225,.72);
+      --brand:#071226;
+      --blue:#2563eb;
+      --green:#059669;
+      --red:#dc2626;
+      --amber:#d97706;
+      --purple:#7c3aed;
+      --shadow:0 22px 60px rgba(15,23,42,.10);
+      --shadow-soft:0 12px 32px rgba(15,23,42,.07);
+      --radius:22px;
+    }
+    @keyframes pageIn { from { opacity:0; transform:translateY(18px) scale(.99); } to { opacity:1; transform:translateY(0) scale(1); } }
+    @keyframes slideRight { from { opacity:0; transform:translateX(-14px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes glowFloat { 0%,100% { transform:translate3d(0,0,0) scale(1); opacity:.62; } 50% { transform:translate3d(18px,-12px,0) scale(1.05); opacity:.85; } }
+    @keyframes shimmer { 0% { transform:translateX(-160%); } 100% { transform:translateX(160%); } }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    html { scroll-behavior:smooth; }
+    body {
+      background:
+        radial-gradient(circle at 8% -8%, rgba(37,99,235,.20), transparent 32rem),
+        radial-gradient(circle at 95% 3%, rgba(124,58,237,.14), transparent 28rem),
+        radial-gradient(circle at 70% 105%, rgba(5,150,105,.11), transparent 30rem),
+        linear-gradient(135deg,#eef4fb,#f8fbff 55%,#eef6ff);
+      color:var(--ink);
+    }
+    body::before, body::after {
+      content:"";
+      position:fixed;
+      width:360px; height:360px;
+      border-radius:999px;
+      pointer-events:none;
+      z-index:-1;
+      filter:blur(4px);
+      animation:glowFloat 8s ease-in-out infinite;
+    }
+    body::before { left:300px; top:80px; background:radial-gradient(circle,rgba(37,99,235,.12),transparent 68%); }
+    body::after { right:60px; bottom:60px; background:radial-gradient(circle,rgba(5,150,105,.12),transparent 68%); animation-delay:1.4s; }
+    .app { animation:pageIn .45s ease both; }
+    aside {
+      background:
+        linear-gradient(180deg,rgba(7,18,38,.98),rgba(15,23,42,.98)),
+        radial-gradient(circle at 20% 0%,rgba(37,99,235,.32),transparent 30rem);
+      border-right:1px solid rgba(255,255,255,.08);
+      box-shadow:18px 0 60px rgba(15,23,42,.18);
+    }
+    .brand {
+      border-bottom:1px solid rgba(255,255,255,.12);
+      position:relative;
+      overflow:hidden;
+    }
+    .brand::after {
+      content:"";
+      position:absolute;
+      inset:auto -80px 0 -80px;
+      height:1px;
+      background:linear-gradient(90deg,transparent,#60a5fa,transparent);
+    }
+    .brand img {
+      background:rgba(255,255,255,.95);
+      box-shadow:0 18px 44px rgba(0,0,0,.30), 0 0 0 1px rgba(255,255,255,.16);
+      transition:transform .25s ease;
+    }
+    .brand img:hover { transform:scale(1.035) rotate(-.5deg); }
+    .brand h1 { letter-spacing:-.03em; }
+    nav button {
+      border:1px solid transparent;
+      position:relative;
+      overflow:hidden;
+      animation:slideRight .35s ease both;
+    }
+    nav button:nth-child(2){animation-delay:.03s} nav button:nth-child(3){animation-delay:.06s}
+    nav button:nth-child(4){animation-delay:.09s} nav button:nth-child(5){animation-delay:.12s}
+    nav button:nth-child(6){animation-delay:.15s} nav button:nth-child(7){animation-delay:.18s}
+    nav button:nth-child(8){animation-delay:.21s} nav button:nth-child(9){animation-delay:.24s}
+    nav button::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
+      transform:translateX(-130%);
+      transition:transform .45s ease;
+    }
+    nav button:hover::before, nav button.active::before { transform:translateX(130%); }
+    nav button:hover {
+      background:rgba(255,255,255,.08);
+      border-color:rgba(255,255,255,.12);
+      transform:translateX(4px);
+    }
+    nav button.active {
+      background:linear-gradient(135deg,#2563eb,#1d4ed8 60%,#7c3aed);
+      color:#fff;
+      box-shadow:0 14px 34px rgba(37,99,235,.34);
+      border-color:rgba(255,255,255,.18);
+    }
+    main { padding:22px; }
+    .topbar {
+      background:rgba(255,255,255,.74);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      border:1px solid rgba(255,255,255,.75);
+      box-shadow:var(--shadow-soft);
+      border-radius:26px;
+      padding:16px 18px;
+    }
+    .topbar h2 { letter-spacing:-.04em; }
+    .topbar p { font-size:14px; }
+    .section.active { animation:pageIn .38s ease both; }
+    .grid > .card:nth-child(1) { animation-delay:.02s; }
+    .grid > .card:nth-child(2) { animation-delay:.05s; }
+    .grid > .card:nth-child(3) { animation-delay:.08s; }
+    .grid > .card:nth-child(4) { animation-delay:.11s; }
+    .card {
+      background:var(--card);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      border:1px solid rgba(255,255,255,.74);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow-soft);
+      animation:pageIn .38s ease both;
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before {
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:1px;
+      background:linear-gradient(90deg,transparent,rgba(37,99,235,.32),transparent);
+      opacity:.9;
+    }
+    .card:hover {
+      transform:translateY(-3px);
+      box-shadow:var(--shadow);
+    }
+    .metric { min-height:148px; }
+    .metric::before {
+      content:"";
+      position:absolute;
+      inset:-50% auto auto -40%;
+      width:190px; height:190px;
+      border-radius:999px;
+      background:radial-gradient(circle,rgba(37,99,235,.12),transparent 64%);
+    }
+    .metric::after {
+      content:"";
+      position:absolute;
+      right:-50px; bottom:-50px;
+      width:150px; height:150px;
+      border-radius:999px;
+      background:linear-gradient(135deg,rgba(37,99,235,.13),rgba(5,150,105,.11));
+      animation:glowFloat 6s ease-in-out infinite;
+    }
+    .metric .label { color:#64748b; }
+    .metric .value {
+      font-size:34px;
+      letter-spacing:-.06em;
+      background:linear-gradient(135deg,#0f172a,#334155);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .metric .icon {
+      width:50px; height:50px;
+      background:linear-gradient(135deg,#eff6ff,#eef2ff);
+      border:1px solid rgba(37,99,235,.10);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 10px 24px rgba(37,99,235,.08);
+    }
+    button, .btn {
+      border-radius:14px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 10px 22px rgba(15,23,42,.08);
+    }
+    button::after, .btn::after {
+      content:"";
+      position:absolute;
+      top:0; bottom:0; width:42px;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+      transform:translateX(-150px) skewX(-18deg);
+      opacity:0;
+    }
+    button:hover::after, .btn:hover::after { animation:shimmer .75s ease; opacity:1; }
+    button:hover { transform:translateY(-2px); }
+    button.blue { background:linear-gradient(135deg,#2563eb,#1d4ed8); }
+    button.green { background:linear-gradient(135deg,#059669,#10b981); }
+    button.red { background:linear-gradient(135deg,#dc2626,#ef4444); }
+    button.amber { background:linear-gradient(135deg,#d97706,#f59e0b); }
+    button.secondary {
+      background:rgba(226,232,240,.82);
+      color:#0f172a;
+      box-shadow:none;
+    }
+    input, select, textarea {
+      background:rgba(255,255,255,.86);
+      border:1px solid rgba(203,213,225,.86);
+      border-radius:14px;
+      transition:all .18s ease;
+    }
+    input:hover, select:hover, textarea:hover { border-color:#93c5fd; }
+    input:focus, select:focus, textarea:focus {
+      border-color:#2563eb;
+      box-shadow:0 0 0 5px rgba(37,99,235,.12);
+      background:#fff;
+    }
+    .table-wrap {
+      background:rgba(255,255,255,.70);
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(226,232,240,.78);
+      border-radius:18px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+    }
+    th {
+      background:linear-gradient(180deg,#f8fafc,#eef2f7);
+      color:#334155;
+    }
+    td { color:#0f172a; }
+    tbody tr { transition:background .16s ease, transform .16s ease; }
+    tbody tr:hover { background:rgba(239,246,255,.72); }
+    .status {
+      border-radius:999px;
+      padding:6px 10px;
+      font-weight:900;
+    }
+    .notice {
+      background:linear-gradient(135deg,rgba(236,254,255,.88),rgba(239,246,255,.88)) !important;
+      border:1px solid rgba(125,211,252,.72) !important;
+      box-shadow:var(--shadow-soft);
+      border-radius:20px !important;
+    }
+    .modal {
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+    }
+    .modal-box {
+      animation:pageIn .25s ease both;
+      border:1px solid rgba(255,255,255,.78);
+      box-shadow:0 30px 90px rgba(15,23,42,.25);
+    }
+    .login-screen {
+      background:
+        radial-gradient(circle at 10% 0%,rgba(37,99,235,.35),transparent 28rem),
+        radial-gradient(circle at 90% 100%,rgba(5,150,105,.28),transparent 25rem),
+        linear-gradient(135deg,#071226,#0f172a 58%,#1e1b4b) !important;
+    }
+    .login-card {
+      animation:pageIn .55s ease both;
+      border:1px solid rgba(255,255,255,.75);
+      box-shadow:0 35px 100px rgba(0,0,0,.32);
+      background:rgba(255,255,255,.92) !important;
+      backdrop-filter:blur(18px);
+    }
+    #onlineStatus { animation:pageIn .35s ease both; }
+
+    /* Premium invoice final */
+    .invoice-paper {
+      border:0 !important;
+      border-radius:26px !important;
+      overflow:hidden;
+      box-shadow:0 30px 90px rgba(15,23,42,.16) !important;
+      background:#fff;
+    }
+    .invoice-head {
+      background:
+        radial-gradient(circle at right top,rgba(255,255,255,.18),transparent 18rem),
+        linear-gradient(135deg,#071226,#0f172a 54%,#1d4ed8) !important;
+    }
+    .invoice-head h1 { letter-spacing:-.035em; }
+    .invoice-title { color:#dbeafe !important; }
+    .invoice-meta > div {
+      background:linear-gradient(180deg,#f8fafc,#ffffff) !important;
+      border:1px solid #e2e8f0 !important;
+      box-shadow:0 8px 22px rgba(15,23,42,.04);
+    }
+    .invoice-paper table {
+      border:1px solid #e2e8f0 !important;
+      box-shadow:0 10px 26px rgba(15,23,42,.04);
+    }
+    .invoice-paper table th {
+      background:linear-gradient(135deg,#0f172a,#1e293b) !important;
+      color:#fff !important;
+    }
+    .invoice-summary tr:last-child td {
+      background:linear-gradient(135deg,#0f172a,#1d4ed8) !important;
+      color:#fff !important;
+    }
+
+    /* Loading overlay + toast */
+    #appLoader {
+      position:fixed;
+      inset:0;
+      display:none;
+      place-items:center;
+      z-index:9999;
+      background:rgba(15,23,42,.42);
+      backdrop-filter:blur(10px);
+    }
+    #appLoader.show { display:grid; }
+    .loader-box {
+      background:rgba(255,255,255,.92);
+      padding:22px 26px;
+      border-radius:22px;
+      text-align:center;
+      box-shadow:0 30px 80px rgba(15,23,42,.25);
+      font-weight:900;
+    }
+    .spinner {
+      width:38px; height:38px;
+      border-radius:999px;
+      border:4px solid #dbeafe;
+      border-top-color:#2563eb;
+      animation:spin .75s linear infinite;
+      margin:0 auto 12px;
+    }
+    #toast {
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      z-index:99999;
+      display:none;
+      max-width:min(420px,calc(100vw - 36px));
+      background:rgba(15,23,42,.94);
+      color:#fff;
+      padding:14px 16px;
+      border-radius:16px;
+      box-shadow:0 20px 50px rgba(15,23,42,.28);
+      animation:pageIn .25s ease both;
+      font-weight:800;
+    }
+    #toast.show { display:block; }
+    @media(max-width:760px) {
+      main { padding:12px; }
+      .topbar { border-radius:20px; padding:14px; }
+      .metric { min-height:124px; }
+      .metric .value { font-size:28px; }
+      .grid { gap:12px; }
+      .card { border-radius:20px; padding:14px; }
+      .actions { gap:7px; }
+      button, .btn { padding:9px 11px; font-size:13px; }
+      .invoice-paper { border-radius:18px !important; }
+    }
+
   </style>
 </head>
 <body>
+<div id="appLoader"><div class="loader-box"><div class="spinner"></div><div id="loaderText">Processing...</div></div></div>
+<div id="toast"></div>
 
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
@@ -337,6 +808,21 @@
         <div class="card metric"><div><div class="label">Total Sales</div><div class="value" id="mSales">0.00</div></div><div class="icon">🧾</div></div>
         <div class="card metric"><div><div class="label">Outstanding</div><div class="value" id="mDue">0.00</div></div><div class="icon">💰</div></div>
       </div>
+
+      <div class="card soft-card no-print" style="margin-top:15px">
+        <div class="toolbar">
+          <h3 style="margin:0">Quick Actions</h3>
+          <span class="muted">Fast access to common tasks</span>
+        </div>
+        <div class="actions">
+          <button class="blue" onclick="document.querySelectorAll('nav button')[1].click(); openCustomer()">Add Customer</button>
+          <button class="green" onclick="document.querySelectorAll('nav button')[2].click(); openProduct()">Add Stock</button>
+          <button class="amber" onclick="document.querySelectorAll('nav button')[3].click(); newInvoice()">New Invoice</button>
+          <button class="secondary" onclick="document.querySelectorAll('nav button')[4].click(); newQuotation()">New Quotation</button>
+          <button class="secondary" onclick="document.querySelectorAll('nav button')[8].click()">View Reports</button>
+        </div>
+      </div>
+
       <div class="grid grid-2" style="margin-top:15px">
         <div class="card"><h3>Low Stock Alerts</h3><div id="lowStock"></div></div>
         <div class="card"><h3>Recent Invoices</h3><div class="table-wrap"><table><thead><tr><th>No</th><th>Customer</th><th class="right">Total</th><th>Status</th></tr></thead><tbody id="recentInvoices"></tbody></table></div></div>
@@ -375,6 +861,8 @@
             <button class="secondary" onclick="addCustomItem()">Custom Item</button>
             <button class="green" onclick="saveInvoice()">Save + Reduce Stock</button>
             <button class="secondary" onclick="window.print()">Print</button>
+            <button class="blue" onclick="downloadInvoicePDF()">Download PDF</button>
+            <button class="green" onclick="shareInvoiceWhatsApp()">WhatsApp Share</button>
             <button class="secondary" onclick="newInvoice()">New</button>
           </div>
         </div>
@@ -528,8 +1016,8 @@
         <div class="card metric"><div><div class="label">Estimated Profit</div><div class="value" id="repProfit">0.00</div></div><div class="icon">📈</div></div>
       </div>
       <div class="grid grid-2" style="margin-top:15px">
-        <div class="card"><h3>Unpaid / Partial Invoices</h3><div class="table-wrap"><table><thead><tr><th>No</th><th>Customer</th><th class="right">Balance</th><th>Status</th></tr></thead><tbody id="repOutstanding"></tbody></table></div></div>
-        <div class="card"><h3>Low Stock Report</h3><div class="table-wrap"><table><thead><tr><th>Code</th><th>Description</th><th class="right">Qty</th></tr></thead><tbody id="repLowStock"></tbody></table></div></div>
+        <div class="card soft-card"><h3>Unpaid / Partial Invoices</h3><div class="table-wrap"><table><thead><tr><th>No</th><th>Customer</th><th class="right">Balance</th><th>Status</th><th>Payment Action</th></tr></thead><tbody id="repOutstanding"></tbody></table></div></div>
+        <div class="card soft-card"><h3>Low Stock Report</h3><div class="table-wrap"><table><thead><tr><th>Code</th><th>Description</th><th class="right">Qty</th></tr></thead><tbody id="repLowStock"></tbody></table></div></div>
       </div>
     </section>
 
@@ -601,6 +1089,24 @@ function today() { return new Date().toISOString().slice(0,10); }
 function money(n) { return Number(n||0).toLocaleString("en-LK", {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function html(s) { return String(s??"").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m])); }
 function byId(id) { return document.getElementById(id); }
+
+function showLoader(message="Processing...") {
+  if (typeof appLoader !== "undefined") {
+    loaderText.textContent = message;
+    appLoader.classList.add("show");
+  }
+}
+function hideLoader() {
+  if (typeof appLoader !== "undefined") appLoader.classList.remove("show");
+}
+function showToast(message) {
+  if (typeof toast === "undefined") return;
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+}
+
 function statusMsg(msg, ok=true) { onlineStatus.textContent = msg; onlineStatus.style.background = ok ? "#ecfeff" : "#fee2e2"; onlineStatus.style.color = ok ? "#155e75" : "#991b1b"; }
 
 async function api(action) {
@@ -809,7 +1315,7 @@ async function saveInvoice() {
   }
   if(t.paid>0) await api(()=>db.from("transactions").insert({type:"Income", category:"Invoice Payment", description:invoice.no, amount:t.paid, transaction_date:invoice.invoice_date}));
   const savedInvoiceNo = invoice.no;
-  alert("Invoice saved online and stock reduced.");
+  showToast("Invoice saved online and stock reduced.");
   await loadAll();
   invoice = {no: nextNoAfter(savedInvoiceNo), customer_id: state.customers[0]?.id || "", invoice_date: today(), due_date: today(), paid_amount: 0, invoice_discount: 0, items: []};
   syncInvoiceInputs();
@@ -817,7 +1323,7 @@ async function saveInvoice() {
 }
 function renderInvoiceHistory() {
   const q=(invoiceSearch?.value||"").toLowerCase();
-  invoiceHistory.innerHTML = state.invoices.filter(inv=>{ const c=state.customers.find(x=>x.id===inv.customer_id)||{}; return (inv.invoice_no+(c.name||"")+inv.invoice_date).toLowerCase().includes(q); }).map(inv=>{ const c=state.customers.find(x=>x.id===inv.customer_id)||{}; return `<tr><td><b>${html(inv.invoice_no)}</b></td><td>${html(c.name||"")}</td><td class="right">${money(inv.total)}</td><td>${badge(inv.status)}</td><td><button class="secondary" onclick="loadInvoice('${inv.id}')">Open</button></td></tr>`; }).join("") || `<tr><td colspan="5" class="center">No invoices</td></tr>`;
+  invoiceHistory.innerHTML = state.invoices.filter(inv=>{ const c=state.customers.find(x=>x.id===inv.customer_id)||{}; return (inv.invoice_no+(c.name||"")+inv.invoice_date).toLowerCase().includes(q); }).map(inv=>{ const c=state.customers.find(x=>x.id===inv.customer_id)||{}; return `<tr><td><b>${html(inv.invoice_no)}</b></td><td>${html(c.name||"")}</td><td class="right">${money(inv.total)}</td><td>${badge(inv.status)}</td><td class="actions"><button class="secondary" onclick="loadInvoice('${inv.id}')">Open</button>${Number(inv.balance||0)>0 ? `<button class="quick-pay" onclick="markInvoicePaid('${inv.id}')">Paid</button><button class="secondary" onclick="markInvoicePartial('${inv.id}')">Partial</button>` : ""}</td></tr>`; }).join("") || `<tr><td colspan="5" class="center">No invoices</td></tr>`;
 }
 function loadInvoice(id) {
   const inv=state.invoices.find(x=>x.id===id); if(!inv) return;
@@ -905,7 +1411,7 @@ async function saveQuotation() {
   const saved = await api(()=>db.from("quotations").insert(qrow).select().single());
   const items=quotation.items.map(it=>({quotation_id:saved.id, product_id:it.product_id, product_code:it.product_code, description:it.description, qty:it.qty, unit_price:it.unit_price, line_total:it.qty*it.unit_price}));
   await api(()=>db.from("quotation_items").insert(items));
-  alert("Quotation saved online.");
+  showToast("Quotation saved online.");
   await loadAll(); newQuotation();
 }
 function renderQuotationHistory() {
@@ -951,7 +1457,7 @@ async function saveReceipt() {
   const st=invStatus(newBalance, Number(inv.total||0));
   await api(()=>db.from("invoices").update({paid_amount:newPaid, balance:newBalance, status:st}).eq("id", inv.id));
   await api(()=>db.from("transactions").insert({type:"Income", category:"Receipt Payment", description:receipt.no+" / "+inv.invoice_no, amount:receipt.amount, transaction_date:receipt.payment_date}));
-  alert("Receipt saved and invoice balance updated.");
+  showToast("Receipt saved and invoice balance updated.");
   await loadAll(); newReceipt();
 }
 function renderReceiptHistory() {
@@ -967,7 +1473,7 @@ async function savePurchase() {
   await api(()=>db.from("purchases").insert({purchase_no:purNo.value||formatDocNo("LE/PO", state.purchases, "purchase_no"), supplier_name:supName.value, product_id:p.id, product_code:p.code, description:p.name, qty, cost_price:cost, other_cost:other, total:qty*cost+other, purchase_date:purDate.value||today()}));
   await api(()=>db.from("products").update({quantity:Number(p.quantity||0)+qty, cost_price:cost||p.cost_price}).eq("id", p.id));
   await api(()=>db.from("transactions").insert({type:"Expense", category:"Stock Purchase", description:supName.value+" - "+p.code, amount:qty*cost+other, transaction_date:purDate.value||today()}));
-  alert("Purchase saved and stock increased.");
+  showToast("Purchase saved and stock increased.");
   supName.value=""; purQty.value=1; purCost.value=0; purOther.value=0; purNo.value=""; await loadAll();
 }
 function renderPurchases() {
@@ -984,6 +1490,126 @@ function inRange(date, from, to) {
   if(to && date > to) return false;
   return true;
 }
+
+
+function cleanFileName(value) {
+  return String(value || "invoice").replace(/[^a-zA-Z0-9-_]/g, "-");
+}
+async function downloadInvoicePDF() {
+  renderInvoicePaper();
+  const element = document.getElementById("invoicePaper");
+  if (!element) return alert("Invoice preview not found.");
+  const invoiceNo = cleanFileName(invoice.no || "invoice");
+  element.classList.add("pdf-mode");
+  const opt = {
+    margin: [6, 6, 6, 6],
+    filename: invoiceNo + ".pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ["avoid-all"] }
+  };
+  try {
+    await html2pdf().set(opt).from(element).save();
+  } catch (e) {
+    console.error(e);
+    alert("PDF download failed. Please use Print and Save as PDF.");
+  } finally {
+    element.classList.remove("pdf-mode");
+  }
+}
+function shareInvoiceWhatsApp() {
+  readInvoiceInputs();
+  const c = state.customers.find(x => x.id === invoice.customer_id) || {};
+  const t = totals();
+  const lines = [
+    "Lucky Engineering (Pvt) Ltd",
+    "Invoice: " + (invoice.no || ""),
+    "Customer: " + (c.name || ""),
+    "Date: " + (invoice.invoice_date || ""),
+    "Total: LKR " + money(t.total),
+    "Paid: LKR " + money(t.paid),
+    "Balance: LKR " + money(t.balance),
+    "",
+    "Thank you."
+  ];
+  const text = encodeURIComponent(lines.join("\n"));
+  window.open("https://wa.me/?text=" + text, "_blank");
+}
+
+async function markInvoicePaid(invoiceId) {
+  const inv = state.invoices.find(i => i.id === invoiceId);
+  if (!inv) return alert("Invoice not found.");
+  const balance = Number(inv.balance || 0);
+  if (balance <= 0) return alert("This invoice is already paid.");
+  const ok = confirm(`Mark ${inv.invoice_no} as PAID? This will add a receipt/payment for LKR ${money(balance)}.`);
+  if (!ok) return;
+  const receiptNo = formatDocNo("LE/RC", state.payments, "receipt_no");
+  await api(()=>db.from("payments").insert({
+    receipt_no: receiptNo,
+    invoice_id: inv.id,
+    customer_id: inv.customer_id,
+    payment_date: today(),
+    amount: balance,
+    method: "Cash",
+    note: "Marked as paid from invoice/report."
+  }));
+  await api(()=>db.from("invoices").update({
+    paid_amount: Number(inv.paid_amount || 0) + balance,
+    balance: 0,
+    status: "Paid"
+  }).eq("id", inv.id));
+  await api(()=>db.from("transactions").insert({
+    type:"Income",
+    category:"Invoice Paid",
+    description: receiptNo + " / " + inv.invoice_no,
+    amount: balance,
+    transaction_date: today()
+  }));
+  showToast("Invoice marked as paid.");
+  await loadAll();
+}
+
+async function markInvoicePartial(invoiceId) {
+  const inv = state.invoices.find(i => i.id === invoiceId);
+  if (!inv) return alert("Invoice not found.");
+  const balance = Number(inv.balance || 0);
+  if (balance <= 0) return alert("This invoice is already paid.");
+  const amountText = prompt(`Enter payment amount for ${inv.invoice_no}. Balance: LKR ${money(balance)}`, balance);
+  if (amountText === null) return;
+  const amount = Number(amountText || 0);
+  if (!amount || amount <= 0) return alert("Please enter a valid amount.");
+  if (amount > balance && !confirm("Amount is higher than current balance. Continue?")) return;
+  const finalAmount = Math.min(amount, balance);
+  const receiptNo = formatDocNo("LE/RC", state.payments, "receipt_no");
+  const newPaid = Number(inv.paid_amount || 0) + finalAmount;
+  const newBalance = Math.max(0, Number(inv.total || 0) - newPaid);
+  const st = invStatus(newBalance, Number(inv.total || 0));
+  await api(()=>db.from("payments").insert({
+    receipt_no: receiptNo,
+    invoice_id: inv.id,
+    customer_id: inv.customer_id,
+    payment_date: today(),
+    amount: finalAmount,
+    method: "Cash",
+    note: "Partial payment from invoice/report."
+  }));
+  await api(()=>db.from("invoices").update({
+    paid_amount: newPaid,
+    balance: newBalance,
+    status: st
+  }).eq("id", inv.id));
+  await api(()=>db.from("transactions").insert({
+    type:"Income",
+    category:"Invoice Payment",
+    description: receiptNo + " / " + inv.invoice_no,
+    amount: finalAmount,
+    transaction_date: today()
+  }));
+  showToast("Payment saved and invoice updated.");
+  await loadAll();
+}
+
 function renderReports() {
   if(typeof reportFrom==="undefined") return;
   const from=reportFrom.value, to=reportTo.value;
@@ -994,7 +1620,7 @@ function renderReports() {
   repPayments.textContent=money(pays.reduce((s,p)=>s+Number(p.amount||0),0));
   repExpenses.textContent=money(exps.reduce((s,t)=>s+Number(t.amount||0),0));
   repProfit.textContent=money(invs.reduce((s,i)=>s+Number(i.total||0),0)-exps.reduce((s,t)=>s+Number(t.amount||0),0));
-  repOutstanding.innerHTML = state.invoices.filter(i=>Number(i.balance||0)>0).map(i=>{const c=state.customers.find(x=>x.id===i.customer_id)||{}; return `<tr><td>${html(i.invoice_no)}</td><td>${html(c.name||"")}</td><td class="right">${money(i.balance)}</td><td>${badge(i.status)}</td></tr>`}).join("") || `<tr><td colspan="4" class="center">No outstanding invoices</td></tr>`;
+  repOutstanding.innerHTML = state.invoices.filter(i=>Number(i.balance||0)>0).map(i=>{const c=state.customers.find(x=>x.id===i.customer_id)||{}; return `<tr><td><b>${html(i.invoice_no)}</b></td><td>${html(c.name||"")}</td><td class="right">${money(i.balance)}</td><td>${badge(i.status)}</td><td class="actions"><button class="quick-pay" onclick="markInvoicePaid('${i.id}')">Mark Paid</button><button class="secondary" onclick="markInvoicePartial('${i.id}')">Partial</button></td></tr>`}).join("") || `<tr><td colspan="5" class="center">No outstanding invoices</td></tr>`;
   repLowStock.innerHTML = state.products.filter(p=>Number(p.quantity)<=Number(p.min_quantity)).map(p=>`<tr><td>${html(p.code)}</td><td>${html(p.name)}</td><td class="right">${p.quantity}</td></tr>`).join("") || `<tr><td colspan="3" class="center">No low stock</td></tr>`;
 }
 function renderLedger() {
@@ -1031,7 +1657,7 @@ function shareWhatsApp() {
   window.open(`https://wa.me/?text=${msg}`,"_blank");
 }
 
-function saveSettings() { company.name=setName.value; company.address=setAddress.value; company.phone=setPhone.value; company.email=setEmail.value; company.prefix=setPrefix.value||"LE/INV"; renderAll(); alert("Preview settings updated."); }
+function saveSettings() { company.name=setName.value; company.address=setAddress.value; company.phone=setPhone.value; company.email=setEmail.value; company.prefix=setPrefix.value||"LE/INV"; renderAll(); showToast("Preview settings updated."); }
 function renderSettings() { setName.value=company.name; setAddress.value=company.address; setPhone.value=company.phone; setEmail.value=company.email; setPrefix.value=company.prefix; }
 function renderDashboard() {
   mCustomers.textContent=state.customers.length;
