@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root { --bg:#f4f6f9; --card:#fff; --ink:#172033; --muted:#64748b; --line:#dbe3ef; --brand:#0f172a; --blue:#2563eb; --green:#059669; --red:#dc2626; --amber:#d97706; }
     * { box-sizing:border-box; }
@@ -950,7 +951,7 @@
     }
 
   
-    /* Invoice image copy/download mode */
+    /* SAFE invoice image mode */
     .image-mode.invoice-paper,
     .image-mode.invoice-paper * {
       opacity: 1 !important;
@@ -1327,6 +1328,24 @@ function today() { return new Date().toISOString().slice(0,10); }
 function money(n) { return Number(n||0).toLocaleString("en-LK", {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function html(s) { return String(s??"").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m])); }
 function byId(id) { return document.getElementById(id); }
+
+function safeShowLoader(message) {
+  const loader = document.getElementById("appLoader");
+  const text = document.getElementById("loaderText");
+  if (loader) {
+    if (text) text.textContent = message || "Processing...";
+    loader.classList.add("show");
+  }
+}
+function safeHideLoader() {
+  const loader = document.getElementById("appLoader");
+  if (loader) loader.classList.remove("show");
+}
+function safeToast(message) {
+  if (typeof showToast === "function") return showToast(message);
+  alert(message);
+}
+
 
 function showLoader(message="Processing...") {
   if (typeof appLoader !== "undefined") {
@@ -1947,44 +1966,54 @@ async function downloadInvoicePDF() {
 }
 
 
+
+function loadHtml2CanvasLibrary() {
+  return new Promise((resolve, reject) => {
+    if (typeof window.html2canvas !== "undefined") return resolve(window.html2canvas);
+
+    const existing = document.querySelector('script[data-lib="html2canvas"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.html2canvas));
+      existing.addEventListener("error", () => reject(new Error("Could not load image library.")));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+    script.async = true;
+    script.dataset.lib = "html2canvas";
+    script.onload = () => {
+      if (typeof window.html2canvas !== "undefined") resolve(window.html2canvas);
+      else reject(new Error("Image library loaded but is not available."));
+    };
+    script.onerror = () => reject(new Error("Could not load image library. Check internet connection and try again."));
+    document.head.appendChild(script);
+  });
+}
+
 async function invoiceToCanvas() {
   renderInvoicePaper();
   const element = document.getElementById("invoicePaper");
   if (!element) throw new Error("Invoice preview not found.");
-  if (typeof html2canvas === "undefined") {
-    throw new Error("Image library is still loading. Please wait a few seconds and try again.");
-  }
+  const html2canvasFn = await loadHtml2CanvasLibrary();
   element.classList.add("image-mode");
   try {
-    const canvas = await html2canvas(element, {
-      scale: 2.5,
+    return await html2canvasFn(element, {
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 1200,
+      windowWidth: Math.max(1200, document.documentElement.clientWidth || 1200),
       onclone: function(doc) {
         const clonedInvoice = doc.getElementById("invoicePaper");
         if (clonedInvoice) {
           clonedInvoice.classList.add("image-mode");
           clonedInvoice.querySelectorAll(".no-print, button").forEach(el => el.style.display = "none");
-          clonedInvoice.querySelectorAll(".invoice-head").forEach(el => {
-            el.style.background = "#0f172a";
-            el.style.color = "#ffffff";
-          });
-          clonedInvoice.querySelectorAll("table th").forEach(el => {
-            el.style.background = "#0f172a";
-            el.style.color = "#ffffff";
-          });
-          clonedInvoice.querySelectorAll(".invoice-summary tr:last-child td").forEach(el => {
-            el.style.background = "#0f172a";
-            el.style.color = "#ffffff";
-          });
         }
       }
     });
-    return canvas;
   } finally {
     element.classList.remove("image-mode");
   }
@@ -1992,42 +2021,42 @@ async function invoiceToCanvas() {
 
 async function copyInvoiceImage() {
   try {
-    showLoader("Creating invoice image...");
+    safeShowLoader("Creating invoice image...");
     const canvas = await invoiceToCanvas();
     const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png", 1));
     if (!blob) throw new Error("Could not create image.");
     if (navigator.clipboard && window.ClipboardItem) {
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      showToast("Invoice image copied. You can paste it in WhatsApp or another app.");
+      safeToast("Invoice image copied. You can paste it in WhatsApp or another app.");
     } else {
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = cleanFileName(invoice.no || "invoice") + ".png";
       a.click();
-      showToast("Clipboard is not supported. Image downloaded instead.");
+      safeToast("Image downloaded. Clipboard image copy is not supported by this browser.");
     }
   } catch (e) {
     console.error(e);
     alert(e.message || "Image copy failed. Please try Download Image.");
   } finally {
-    hideLoader();
+    safeHideLoader();
   }
 }
 
 async function downloadInvoiceImage() {
   try {
-    showLoader("Creating invoice image...");
+    safeShowLoader("Creating invoice image...");
     const canvas = await invoiceToCanvas();
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png", 1);
     a.download = cleanFileName(invoice.no || "invoice") + ".png";
     a.click();
-    showToast("Invoice image downloaded.");
+    safeToast("Invoice image downloaded.");
   } catch (e) {
     console.error(e);
     alert(e.message || "Image download failed.");
   } finally {
-    hideLoader();
+    safeHideLoader();
   }
 }
 
