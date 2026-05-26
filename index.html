@@ -895,6 +895,59 @@
       gap: 14px !important;
     }
 
+  
+    /* PDF COLOR FIX: force solid colors and hide action controls in downloaded PDF */
+    .pdf-mode,
+    .pdf-mode * {
+      opacity: 1 !important;
+      filter: none !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    .pdf-mode .no-print,
+    .pdf-mode th.no-print,
+    .pdf-mode td.no-print,
+    .pdf-mode button {
+      display: none !important;
+    }
+    .pdf-mode .invoice-head {
+      background: #0f172a !important;
+      color: #ffffff !important;
+    }
+    .pdf-mode .invoice-head h1,
+    .pdf-mode .invoice-head div,
+    .pdf-mode .invoice-title {
+      color: #ffffff !important;
+    }
+    .pdf-mode .invoice-title {
+      color: #dbeafe !important;
+    }
+    .pdf-mode table th {
+      background: #0f172a !important;
+      color: #ffffff !important;
+    }
+    .pdf-mode .invoice-summary tr:last-child td {
+      background: #0f172a !important;
+      color: #ffffff !important;
+    }
+    .pdf-mode .status.paid {
+      background: #dcfce7 !important;
+      color: #14532d !important;
+    }
+    .pdf-mode .status.unpaid {
+      background: #fee2e2 !important;
+      color: #7f1d1d !important;
+    }
+    .pdf-mode .status.partial {
+      background: #fef3c7 !important;
+      color: #78350f !important;
+    }
+    .pdf-mode input {
+      color: #0f172a !important;
+      -webkit-text-fill-color: #0f172a !important;
+    }
+
   </style>
 </head>
 <body>
@@ -1648,9 +1701,36 @@ async function downloadInvoicePDF() {
   const opt = {
     margin: [8, 8, 8, 8],
     filename: invoiceNo + ".pdf",
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    image: { type: "png", quality: 1 },
+    html2canvas: {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 1200,
+      onclone: function(doc) {
+        const clonedInvoice = doc.getElementById("invoicePaper");
+        if (clonedInvoice) {
+          clonedInvoice.classList.add("pdf-mode");
+          clonedInvoice.querySelectorAll(".no-print, button").forEach(el => el.style.display = "none");
+          clonedInvoice.querySelectorAll(".invoice-head").forEach(el => {
+            el.style.background = "#0f172a";
+            el.style.color = "#ffffff";
+          });
+          clonedInvoice.querySelectorAll("table th").forEach(el => {
+            el.style.background = "#0f172a";
+            el.style.color = "#ffffff";
+          });
+          clonedInvoice.querySelectorAll(".invoice-summary tr:last-child td").forEach(el => {
+            el.style.background = "#0f172a";
+            el.style.color = "#ffffff";
+          });
+        }
+      }
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
     pagebreak: { mode: ["avoid-all"] }
   };
   try {
@@ -1662,6 +1742,7 @@ async function downloadInvoicePDF() {
     element.classList.remove("pdf-mode");
   }
 }
+
 function shareInvoiceWhatsApp() {
   readInvoiceInputs();
   const c = state.customers.find(x => x.id === invoice.customer_id) || {};
