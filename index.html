@@ -1243,28 +1243,27 @@
 
     <section id="profit_summary" class="section">
       <div class="card no-print">
-        <h3>Profit Summary</h3>
-        <p style="color:#64748b;margin-top:-6px">Only PAID invoices/payments are counted. Unpaid invoices are excluded from sales and profit.</p>
+        <h3>Paid Sales & Expenses Summary</h3>
+        <p style="color:#64748b;margin-top:-6px">Only new paid amounts after the 53,400 baseline are counted. Unpaid invoices are excluded.</p>
         <div class="grid grid-3">
           <div><label>From Date</label><input id="profitFrom" type="date" onchange="renderProfitSummary()"></div>
           <div><label>To Date</label><input id="profitTo" type="date" onchange="renderProfitSummary()"></div>
-          <div><label>Action</label><button class="secondary" onclick="renderProfitSummary()">Refresh Profit</button></div>
+          <div><label>Action</label><button class="secondary" onclick="renderProfitSummary()">Refresh</button></div>
         </div>
       </div>
       <div class="grid grid-4" style="margin-top:15px">
         <div class="card metric"><div><div class="label">Paid Sales</div><div class="value" id="profitPaidSales">0.00</div></div><div class="icon">💵</div></div>
-        <div class="card metric"><div><div class="label">Cost of Paid Sales</div><div class="value" id="profitPaidCost">0.00</div></div><div class="icon">📦</div></div>
-        <div class="card metric"><div><div class="label">Gross Profit</div><div class="value" id="profitGross">0.00</div></div><div class="icon">📈</div></div>
-        <div class="card metric"><div><div class="label">Net Profit</div><div class="value" id="profitNet">0.00</div></div><div class="icon">✅</div></div>
-      </div>
-      <div class="grid grid-3" style="margin-top:15px">
         <div class="card metric"><div><div class="label">Expenses</div><div class="value" id="profitExpenses">0.00</div></div><div class="icon">📉</div></div>
-        <div class="card metric"><div><div class="label">Today Net Profit</div><div class="value" id="profitTodayNet">0.00</div></div><div class="icon">📅</div></div>
-        <div class="card metric"><div><div class="label">Month Net Profit</div><div class="value" id="profitMonthNet">0.00</div></div><div class="icon">🗓️</div></div>
+        <div class="card metric"><div><div class="label">Balance After Expenses</div><div class="value" id="profitBalance">0.00</div></div><div class="icon">✅</div></div>
+        <div class="card metric"><div><div class="label">Outstanding</div><div class="value" id="profitOutstanding">0.00</div></div><div class="icon">💰</div></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:15px">
+        <div class="card metric"><div><div class="label">Today Paid Sales</div><div class="value" id="profitTodaySales">0.00</div></div><div class="icon">📅</div></div>
+        <div class="card metric"><div><div class="label">Month Paid Sales</div><div class="value" id="profitMonthSales">0.00</div></div><div class="icon">🗓️</div></div>
       </div>
       <div class="card" style="margin-top:15px">
-        <h3>Paid Invoice Profit Breakdown</h3>
-        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th class="right">Paid Counted</th><th class="right">Cost Counted</th><th class="right">Profit</th></tr></thead><tbody id="profitRows"></tbody></table></div>
+        <h3>New Paid Amount Breakdown</h3>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th class="right">New Paid Counted</th><th class="right">Invoice Balance</th></tr></thead><tbody id="profitRows"></tbody></table></div>
       </div>
     </section>
 
@@ -1272,8 +1271,11 @@
       <div class="grid grid-2">
         <div class="card">
           <h3>Upload Bank Slip</h3>
-          <label>Invoice Number(s)</label>
-          <input id="slipInvoiceNumbers" placeholder="Example: LE/INV/00001, LE/INV/00002">
+          <label>Select Paid Invoice(s)</label>
+          <select id="slipInvoicesSelect" multiple size="8"></select>
+          <small style="color:#64748b">Hold Ctrl on PC to select multiple invoices. On phone, tap multiple options if supported.</small>
+          <label>Selected Invoice Numbers</label>
+          <input id="slipInvoiceNumbers" placeholder="Selected invoice numbers will appear here">
           <label>Amount</label>
           <input id="slipAmount" type="number" min="0" step="0.01">
           <label>Bank / Reference</label>
@@ -1283,7 +1285,6 @@
           <div class="actions" style="margin-top:12px">
             <button class="green" onclick="uploadBankSlip()">Upload Slip</button>
           </div>
-          <p style="color:#64748b">You can mention one or many invoice numbers. The slip file is saved in Supabase as a record.</p>
         </div>
         <div class="card">
           <h3>Bank Slip History</h3>
@@ -1304,15 +1305,15 @@
 
     <section id="accounts" class="section">
       <div class="grid grid-2">
-        <div class="card metric"><div><div class="label">Income</div><div class="value" id="accIncome">0.00</div></div><div class="icon">📈</div></div>
+        <div class="card metric"><div><div class="label">Paid Sales</div><div class="value" id="accIncome">0.00</div></div><div class="icon">📈</div></div>
         <div class="card metric"><div><div class="label">Expenses</div><div class="value" id="accExpenses">0.00</div></div><div class="icon">📉</div></div>
         
       </div>
       <div class="grid grid-4" style="margin-top:15px">
-        <div class="card metric"><div><div class="label">Today Gross Profit</div><div class="value" id="accTodayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
-        <div class="card metric"><div><div class="label">Today Net Profit</div><div class="value" id="accTodayNetProfit">0.00</div></div><div class="icon">✅</div></div>
-        <div class="card metric"><div><div class="label">Month Gross Profit</div><div class="value" id="accMonthGrossProfit">0.00</div></div><div class="icon">📈</div></div>
-        <div class="card metric"><div><div class="label">Month Net Profit</div><div class="value" id="accMonthNetProfit">0.00</div></div><div class="icon">💰</div></div>
+        <div class="card metric"><div><div class="label">Today Paid Sales</div><div class="value" id="accTodayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
+        <div class="card metric"><div><div class="label">Today Balance</div><div class="value" id="accTodayNetProfit">0.00</div></div><div class="icon">✅</div></div>
+        <div class="card metric"><div><div class="label">Month Paid Sales</div><div class="value" id="accMonthGrossProfit">0.00</div></div><div class="icon">📈</div></div>
+        <div class="card metric"><div><div class="label">Month Balance</div><div class="value" id="accMonthNetProfit">0.00</div></div><div class="icon">💰</div></div>
       </div>
       <div class="grid grid-2" style="margin-top:15px">
         <div class="card">
@@ -1354,6 +1355,7 @@
 
 <script>
 const BASELINE_PAID_SALES = 53400;
+const PAID_BASELINE_VERSION = "vip-baseline-53400-2026-05-27-v3";
 const SUPABASE_URL = "https://kvzozqljwucqbqkvhsqo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vnP8fXOE-UIevlvoW_Q9Pg_JDDvYAGA";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1483,6 +1485,7 @@ async function loadAll() {
     api(()=>db.from("bank_slips").select("*").order("uploaded_at", {ascending:false}))
   ]);
   state = { customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases, bankSlips };
+  initializePaidSalesBaseline();
   if (!invoice.no) newInvoice(false);
   if (!quotation.no) newQuotation(false);
   if (!receipt.no) newReceipt(false);
@@ -1655,16 +1658,20 @@ async function saveTransaction() {
 }
 async function deleteTransaction(id) { if(confirm("Delete transaction?")) { await api(()=>db.from("transactions").delete().eq("id",id)); await loadAll(); } }
 function renderAccounts() {
-  const invoiceIncome = state.invoices.reduce((s,inv)=>s+Number(inv.paid_amount||0),0);
-  const txIncome = state.transactions.filter(t=>t.type==="Income" && t.category !== "Invoice Payment").reduce((s,t)=>s+Number(t.amount||0),0);
+  const paidSales = BASELINE_PAID_SALES + paidSalesAfterBaseline();
   const exp = state.transactions.filter(t=>t.type==="Expense").reduce((s,t)=>s+Number(t.amount||0),0);
-  accIncome.textContent=money(BASELINE_PAID_SALES + invoiceIncome + txIncome); accExpenses.textContent=money(exp); if (typeof accProfit !== "undefined") accProfit.textContent=money(BASELINE_PAID_SALES + invoiceIncome + txIncome - exp);
-  const todayProfit = paidProfitSummary(today(), today());
-  const monthProfit = paidProfitSummary(monthStart(today()), today());
-  if (typeof accTodayGrossProfit !== "undefined") accTodayGrossProfit.textContent = money(todayProfit.grossProfit);
-  if (typeof accTodayNetProfit !== "undefined") accTodayNetProfit.textContent = money(todayProfit.netProfit);
-  if (typeof accMonthGrossProfit !== "undefined") accMonthGrossProfit.textContent = money(monthProfit.grossProfit);
-  if (typeof accMonthNetProfit !== "undefined") accMonthNetProfit.textContent = money(monthProfit.netProfit);
+  const todayS = paidSummary(today(), today());
+  const monthS = paidSummary(monthStart(today()), today());
+
+  accIncome.textContent=money(paidSales);
+  accExpenses.textContent=money(exp);
+  if (typeof accProfit !== "undefined") accProfit.textContent=money(paidSales-exp);
+
+  if (typeof accTodayGrossProfit !== "undefined") accTodayGrossProfit.textContent = money(todayS.paidSales);
+  if (typeof accTodayNetProfit !== "undefined") accTodayNetProfit.textContent = money(todayS.balance);
+  if (typeof accMonthGrossProfit !== "undefined") accMonthGrossProfit.textContent = money(monthS.paidSales);
+  if (typeof accMonthNetProfit !== "undefined") accMonthNetProfit.textContent = money(monthS.balance);
+
   txRows.innerHTML = state.transactions.map(t=>`<tr><td>${html(t.transaction_date)}</td><td>${html(t.type)}</td><td>${html(t.category)}</td><td class="right">${money(t.amount)}</td><td><button class="red" onclick="deleteTransaction('${t.id}')">Delete</button></td></tr>`).join("") || `<tr><td colspan="5" class="center">No transactions</td></tr>`;
 }
 
@@ -2368,21 +2375,21 @@ function paidSalesInRange(from, to) {
     return Number(inv.paid_amount || 0) > 0;
   });
 }
-function paidProfitSummary(from, to) {
-  const invs = paidSalesInRange(from, to);
-  let paidSales = 0, costCounted = 0, grossProfit = 0;
-  const rows = invs.map(inv => {
-    const total = Number(inv.total || 0);
-    const paid = Math.min(Number(inv.paid_amount || 0), total);
-    const ratio = invoicePaidRatio(inv);
-    const cost = invoiceCostTotal(inv) * ratio;
-    const profit = paid - cost;
-    paidSales += paid;
-    costCounted += cost;
-    grossProfit += profit;
+function paidSummary(from="", to="") {
+  const rows = [];
+  let paidSales = 0;
+
+  state.invoices.forEach(inv => {
+    const d = inv.invoice_date || "";
+    if (from && d < from) return;
+    if (to && d > to) return;
+    const counted = paidAmountAfterBaseline(inv);
+    if (counted <= 0) return;
     const c = state.customers.find(x => x.id === inv.customer_id) || {};
-    return { inv, customer: c.name || "", paid, cost, profit };
+    paidSales += counted;
+    rows.push({ inv, customer: c.name || "", counted, balance: Number(inv.balance || 0) });
   });
+
   const expenses = state.transactions
     .filter(t => t.type === "Expense")
     .filter(t => {
@@ -2392,26 +2399,34 @@ function paidProfitSummary(from, to) {
       return true;
     })
     .reduce((s, t) => s + Number(t.amount || 0), 0);
-  return { paidSales: paidSales + BASELINE_PAID_SALES, costCounted, grossProfit: grossProfit + BASELINE_PAID_SALES, expenses, netProfit: grossProfit + BASELINE_PAID_SALES - expenses, rows };
+
+  return { paidSales, expenses, balance: paidSales - expenses, rows };
 }
+
 function renderProfitSummary() {
   if (typeof profitFrom === "undefined") return;
   const from = profitFrom.value;
   const to = profitTo.value;
-  const s = paidProfitSummary(from, to);
-  profitPaidSales.textContent = money(s.paidSales);
-  profitPaidCost.textContent = money(s.costCounted);
-  profitGross.textContent = money(s.grossProfit);
+  const s = paidSummary(from, to);
+  const totalPaidSales = BASELINE_PAID_SALES + s.paidSales;
+  const outstanding = state.invoices.reduce((sum, inv) => sum + Math.max(0, Number(inv.balance || 0)), 0);
+
+  profitPaidSales.textContent = money(totalPaidSales);
   profitExpenses.textContent = money(s.expenses);
-  profitNet.textContent = money(s.netProfit);
-  profitTodayNet.textContent = money(paidProfitSummary(today(), today()).netProfit);
-  profitMonthNet.textContent = money(paidProfitSummary(monthStart(today()), today()).netProfit);
-  profitRows.innerHTML = s.rows.map(r => `<tr><td>${html(r.inv.invoice_date)}</td><td><b>${html(r.inv.invoice_no)}</b></td><td>${html(r.customer)}</td><td class="right">${money(r.paid)}</td><td class="right">${money(r.cost)}</td><td class="right">${money(r.profit)}</td></tr>`).join("") || `<tr><td colspan="6" class="center">No paid invoices for this period</td></tr>`;
+  profitBalance.textContent = money(totalPaidSales - s.expenses);
+  profitOutstanding.textContent = money(outstanding);
+  profitTodaySales.textContent = money(paidSalesAfterBaseline(today(), today()));
+  profitMonthSales.textContent = money(paidSalesAfterBaseline(monthStart(today()), today()));
+
+  profitRows.innerHTML = s.rows.map(r => `<tr><td>${html(r.inv.invoice_date)}</td><td><b>${html(r.inv.invoice_no)}</b></td><td>${html(r.customer)}</td><td class="right">${money(r.counted)}</td><td class="right">${money(r.balance)}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No new paid invoices for this period</td></tr>`;
 }
+
 async function uploadBankSlip() {
   const file = slipFile.files && slipFile.files[0];
   if (!file) return alert("Please choose a slip file.");
-  if (!slipInvoiceNumbers.value.trim()) return alert("Please enter invoice number(s).");
+  syncSelectedSlipInvoices();
+  if (!slipInvoiceNumbers.value.trim()) return alert("Please select or enter invoice number(s).");
+
   const reader = new FileReader();
   reader.onload = async () => {
     await api(()=>db.from("bank_slips").insert({
@@ -2426,13 +2441,32 @@ async function uploadBankSlip() {
     slipAmount.value = "";
     slipReference.value = "";
     slipFile.value = "";
+    if (slipInvoicesSelect) Array.from(slipInvoicesSelect.options).forEach(o => o.selected = false);
     showToast ? showToast("Bank slip uploaded.") : alert("Bank slip uploaded.");
     await loadAll();
   };
   reader.readAsDataURL(file);
 }
+
+function syncSelectedSlipInvoices() {
+  if (typeof slipInvoicesSelect === "undefined") return;
+  const selected = Array.from(slipInvoicesSelect.selectedOptions).map(o => o.value);
+  if (selected.length) slipInvoiceNumbers.value = selected.join(", ");
+}
+
 function renderBankSlips() {
   if (typeof bankSlipRows === "undefined") return;
+  const paidInvoices = state.invoices
+    .filter(inv => Number(inv.paid_amount || 0) > 0)
+    .sort((a,b) => String(b.invoice_date || "").localeCompare(String(a.invoice_date || "")));
+
+  slipInvoicesSelect.innerHTML = paidInvoices.map(inv => {
+    const c = state.customers.find(x => x.id === inv.customer_id) || {};
+    return `<option value="${html(inv.invoice_no)}">${html(inv.invoice_no)} | ${html(c.name || "")} | Paid: ${money(inv.paid_amount)}</option>`;
+  }).join("");
+
+  slipInvoicesSelect.onchange = syncSelectedSlipInvoices;
+
   bankSlipRows.innerHTML = state.bankSlips.map(s => `<tr><td>${html((s.uploaded_at || "").slice(0,10))}</td><td>${html(s.invoice_numbers || "")}</td><td>${html(s.reference || "")}</td><td class="right">${money(s.amount)}</td><td>${s.file_data ? `<a href="${s.file_data}" download="${html(s.file_name || "slip")}" target="_blank">Open</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No bank slips uploaded</td></tr>`;
 }
 
