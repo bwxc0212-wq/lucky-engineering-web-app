@@ -1042,8 +1042,7 @@
       <div class="grid grid-4">
         <div class="card metric"><div><div class="label">Customers</div><div class="value" id="mCustomers">0</div></div><div class="icon">👥</div></div>
         <div class="card metric"><div><div class="label">Stock Value</div><div class="value" id="mStockValue">0.00</div></div><div class="icon">📦</div></div>
-        <div class="card metric"><div><div class="label">Paid Sales</div><div class="value" id="mSales">0.00</div></div><div class="icon">💵</div></div>
-        
+        <div class="card metric"><div><div class="label">Paid Sales</div><div class="value" id="mSales">0.00</div></div><div class="icon">🧾</div></div>
         <div class="card metric"><div><div class="label">Outstanding</div><div class="value" id="mDue">0.00</div></div><div class="icon">💰</div></div>
       </div>
 
@@ -1057,7 +1056,7 @@
           <button class="green" onclick="document.querySelectorAll('nav button')[2].click(); openProduct()">Add Stock</button>
           <button class="amber" onclick="document.querySelectorAll('nav button')[3].click(); newInvoice()">New Invoice</button>
           <button class="secondary" onclick="document.querySelectorAll('nav button')[4].click(); newQuotation()">New Quotation</button>
-          <button class="secondary" onclick="show('profit_summary', document.querySelector('nav button[onclick*=profit_summary]'))">View Profit Summary</button>
+          <button class="secondary" onclick="document.querySelectorAll('nav button')[8].click()">View Reports</button>
         </div>
       </div>
 
@@ -1241,14 +1240,15 @@
       </div>
     </section>
 
+
     <section id="profit_summary" class="section">
       <div class="card no-print">
         <h3>Paid Sales & Expenses Summary</h3>
-        <p style="color:#64748b;margin-top:-6px">Only new paid amounts after the 53,400 baseline are counted. Unpaid invoices are excluded.</p>
+        <p style="color:#64748b;margin-top:-6px">Paid Sales starts from LKR 53,400. Only new paid invoice amounts after baseline are counted. Unpaid invoices are excluded.</p>
         <div class="grid grid-3">
           <div><label>From Date</label><input id="profitFrom" type="date" onchange="renderProfitSummary()"></div>
           <div><label>To Date</label><input id="profitTo" type="date" onchange="renderProfitSummary()"></div>
-          <div><label>Action</label><button class="secondary" onclick="renderProfitSummary()">Refresh</button></div>
+          <div><label>Action</label><button class="secondary" onclick="resetPaidSalesBaselineNow()">Reset 53,400 Baseline</button></div>
         </div>
       </div>
       <div class="grid grid-4" style="margin-top:15px">
@@ -1267,15 +1267,16 @@
       </div>
     </section>
 
+
     <section id="bank_slips" class="section">
       <div class="grid grid-2">
         <div class="card">
           <h3>Upload Bank Slip</h3>
           <label>Select Paid Invoice(s)</label>
           <select id="slipInvoicesSelect" multiple size="8"></select>
-          <small style="color:#64748b">Hold Ctrl on PC to select multiple invoices. On phone, tap multiple options if supported.</small>
+          <small style="color:#64748b">Select one or more paid invoices. You can also type invoice numbers manually below.</small>
           <label>Selected Invoice Numbers</label>
-          <input id="slipInvoiceNumbers" placeholder="Selected invoice numbers will appear here">
+          <input id="slipInvoiceNumbers" placeholder="Example: LE/INV/00001, LE/INV/00002">
           <label>Amount</label>
           <input id="slipAmount" type="number" min="0" step="0.01">
           <label>Bank / Reference</label>
@@ -1304,16 +1305,16 @@
     </section>
 
     <section id="accounts" class="section">
-      <div class="grid grid-2">
+      <div class="grid grid-3">
         <div class="card metric"><div><div class="label">Paid Sales</div><div class="value" id="accIncome">0.00</div></div><div class="icon">📈</div></div>
         <div class="card metric"><div><div class="label">Expenses</div><div class="value" id="accExpenses">0.00</div></div><div class="icon">📉</div></div>
-        
+        <div class="card metric"><div><div class="label">Balance After Expenses</div><div class="value" id="accProfit">0.00</div></div><div class="icon">✅</div></div>
       </div>
       <div class="grid grid-4" style="margin-top:15px">
-        <div class="card metric"><div><div class="label">Today Paid Sales</div><div class="value" id="accTodayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
-        <div class="card metric"><div><div class="label">Today Balance</div><div class="value" id="accTodayNetProfit">0.00</div></div><div class="icon">✅</div></div>
-        <div class="card metric"><div><div class="label">Month Paid Sales</div><div class="value" id="accMonthGrossProfit">0.00</div></div><div class="icon">📈</div></div>
-        <div class="card metric"><div><div class="label">Month Balance</div><div class="value" id="accMonthNetProfit">0.00</div></div><div class="icon">💰</div></div>
+        <div class="card metric"><div><div class="label">Today Gross Profit</div><div class="value" id="accTodayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
+        <div class="card metric"><div><div class="label">Today Net Profit</div><div class="value" id="accTodayNetProfit">0.00</div></div><div class="icon">✅</div></div>
+        <div class="card metric"><div><div class="label">Month Gross Profit</div><div class="value" id="accMonthGrossProfit">0.00</div></div><div class="icon">📈</div></div>
+        <div class="card metric"><div><div class="label">Month Net Profit</div><div class="value" id="accMonthNetProfit">0.00</div></div><div class="icon">💰</div></div>
       </div>
       <div class="grid grid-2" style="margin-top:15px">
         <div class="card">
@@ -1355,7 +1356,7 @@
 
 <script>
 const BASELINE_PAID_SALES = 53400;
-const PAID_BASELINE_VERSION = "vip-baseline-53400-2026-05-27-v3";
+const BASELINE_KEY = "lucky_vip_paid_baseline_v1";
 const SUPABASE_URL = "https://kvzozqljwucqbqkvhsqo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vnP8fXOE-UIevlvoW_Q9Pg_JDDvYAGA";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1421,20 +1422,6 @@ async function api(action) {
   }
 }
 
-async function optionalApi(action, fallback=[]) {
-  try {
-    const result = await action();
-    if (result.error) {
-      console.warn("Optional table/query skipped:", result.error.message);
-      return fallback;
-    }
-    return result.data || fallback;
-  } catch (e) {
-    console.warn("Optional table/query skipped:", e.message);
-    return fallback;
-  }
-}
-
 
 let currentSession = null;
 
@@ -1482,38 +1469,40 @@ db.auth.onAuthStateChange((_event, session) => {
   currentSession = session;
 });
 
+
+async function optionalApi(action, fallback=[]) {
+  try {
+    const result = await action();
+    if (result.error) return fallback;
+    return result.data || fallback;
+  } catch (e) {
+    console.warn("Optional data skipped:", e.message);
+    return fallback;
+  }
+}
 async function loadAll() {
   if (!currentSession) return startApp();
   statusMsg("Loading online data...");
-  try {
-    const [customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases] = await Promise.all([
-      api(()=>db.from("customers").select("*").order("created_at", {ascending:false})),
-      api(()=>db.from("products").select("*").order("created_at", {ascending:false})),
-      api(()=>db.from("invoices").select("*").order("created_at", {ascending:false})),
-      api(()=>db.from("invoice_items").select("*")),
-      api(()=>db.from("transactions").select("*").order("created_at", {ascending:false})),
-      api(()=>db.from("profiles").select("*").order("created_at", {ascending:false})),
-      optionalApi(()=>db.from("quotations").select("*").order("created_at", {ascending:false}), []),
-      optionalApi(()=>db.from("quotation_items").select("*"), []),
-      optionalApi(()=>db.from("payments").select("*").order("payment_date", {ascending:false}), []),
-      optionalApi(()=>db.from("purchases").select("*").order("purchase_date", {ascending:false}), [])
-    ]);
-
-    const bankSlips = await optionalApi(()=>db.from("bank_slips").select("*").order("uploaded_at", {ascending:false}), []);
-
-    state = { customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases, bankSlips };
-
-    if (typeof initializePaidSalesBaseline === "function") initializePaidSalesBaseline();
-    if (!invoice.no) newInvoice(false);
-    if (typeof quotation !== "undefined" && !quotation.no && typeof newQuotation === "function") newQuotation(false);
-    if (typeof receipt !== "undefined" && !receipt.no && typeof newReceipt === "function") newReceipt(false);
-
-    renderAll();
-    statusMsg("Online database connected. Data is saved in Supabase.");
-  } catch (e) {
-    console.error("Load failed:", e);
-    statusMsg("Loading failed: " + e.message + ". Check Supabase SQL tables/policies.", false);
-  }
+  const [customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases] = await Promise.all([
+    api(()=>db.from("customers").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("products").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("invoices").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("invoice_items").select("*")),
+    api(()=>db.from("transactions").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("profiles").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("quotations").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("quotation_items").select("*")),
+    api(()=>db.from("payments").select("*").order("payment_date", {ascending:false})),
+    api(()=>db.from("purchases").select("*").order("purchase_date", {ascending:false}))
+  ]);
+  state = { customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases };
+  state.bankSlips = await optionalApi(()=>db.from("bank_slips").select("*").order("uploaded_at", {ascending:false}), []);
+  initializePaidBaseline();
+  if (!invoice.no) newInvoice(false);
+  if (!quotation.no) newQuotation(false);
+  if (!receipt.no) newReceipt(false);
+  renderAll();
+  statusMsg("Online database connected. Data is saved in Supabase.");
 }
 
 function show(id, btn) {
@@ -1521,7 +1510,7 @@ function show(id, btn) {
   byId(id).classList.add("active");
   document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
   btn.classList.add("active");
-  const titles={dashboard:["Dashboard","Online data connected to Supabase."],customers:["Customers","Add and manage unlimited customers."],stock:["Stock","Manage inventory, cost, selling price and low stock alerts."],invoices:["Invoices","Create professional invoices and reduce stock automatically."],quotations:["Quotations","Create estimates and convert approved quotations to invoices."],receipts:["Receipts","Record customer payments and print payment receipts."],purchases:["Purchases","Add supplier purchases and increase stock."],profit_summary:["Profit Summary","Paid profit minus expenses by day and month."],bank_slips:["Bank Slips","Upload bank payment slips and mention invoice numbers."],ledger:["Ledger","Customer statements with balances and payment history."],accounts:["Accounts","Track income, expenses and profit."],users:["Users","Manage system users and roles."],settings:["Settings","Update company details and invoice settings."]};
+  const titles={dashboard:["Dashboard","Online data connected to Supabase."],customers:["Customers","Add and manage unlimited customers."],stock:["Stock","Manage inventory, cost, selling price and low stock alerts."],invoices:["Invoices","Create professional invoices and reduce stock automatically."],quotations:["Quotations","Create estimates and convert approved quotations to invoices."],receipts:["Receipts","Record customer payments and print payment receipts."],purchases:["Purchases","Add supplier purchases and increase stock."],profit_summary:["Profit Summary","Paid sales from 53,400 baseline minus expenses."],bank_slips:["Bank Slips","Upload bank slips and link paid invoices."],ledger:["Ledger","Customer statements with balances and payment history."],accounts:["Accounts","Track income, expenses and profit."],users:["Users","Manage system users and roles."],settings:["Settings","Update company details and invoice settings."]};
   pageTitle.textContent=titles[id][0]; pageSub.textContent=titles[id][1];
 }
 function invoiceNumberValue(no) {
@@ -1677,23 +1666,21 @@ async function saveTransaction() {
   const row={type:txType.value, category:txCategory.value, description:txDescription.value, amount:Number(txAmount.value||0), transaction_date:txDate.value||today()};
   if(!row.category || !row.amount) return alert("Category and amount are required.");
   await api(()=>db.from("transactions").insert(row));
-  txCategory.value=txDescription.value=txAmount.value=""; txDate.value=today(); await loadAll();
+  txCategory.value=txDescription.value=txAmount.value=""; txDate.value=today();
+if (typeof profitFrom !== "undefined") { profitFrom.value=today().slice(0,8)+"01"; profitTo.value=today(); } await loadAll();
 }
 async function deleteTransaction(id) { if(confirm("Delete transaction?")) { await api(()=>db.from("transactions").delete().eq("id",id)); await loadAll(); } }
 function renderAccounts() {
-  const paidSales = BASELINE_PAID_SALES + paidSalesAfterBaseline();
-  const exp = state.transactions.filter(t=>t.type==="Expense").reduce((s,t)=>s+Number(t.amount||0),0);
-  const todayS = paidSummary(today(), today());
-  const monthS = paidSummary(monthStart(today()), today());
+  const paidSales = BASELINE_PAID_SALES + newPaidSales();
+  const exp = expenseTotal();
+  accIncome.textContent = money(paidSales);
+  accExpenses.textContent = money(exp);
+  if (typeof accProfit !== "undefined") accProfit.textContent = money(paidSales - exp);
 
-  accIncome.textContent=money(paidSales);
-  accExpenses.textContent=money(exp);
-  if (typeof accProfit !== "undefined") accProfit.textContent=money(paidSales-exp);
-
-  if (typeof accTodayGrossProfit !== "undefined") accTodayGrossProfit.textContent = money(todayS.paidSales);
-  if (typeof accTodayNetProfit !== "undefined") accTodayNetProfit.textContent = money(todayS.balance);
-  if (typeof accMonthGrossProfit !== "undefined") accMonthGrossProfit.textContent = money(monthS.paidSales);
-  if (typeof accMonthNetProfit !== "undefined") accMonthNetProfit.textContent = money(monthS.balance);
+  if (typeof accTodayGrossProfit !== "undefined") accTodayGrossProfit.textContent = money(newPaidSales(today(), today()));
+  if (typeof accTodayNetProfit !== "undefined") accTodayNetProfit.textContent = money(newPaidSales(today(), today()) - expenseTotal(today(), today()));
+  if (typeof accMonthGrossProfit !== "undefined") accMonthGrossProfit.textContent = money(newPaidSales(monthStart(today()), today()));
+  if (typeof accMonthNetProfit !== "undefined") accMonthNetProfit.textContent = money(newPaidSales(monthStart(today()), today()) - expenseTotal(monthStart(today()), today()));
 
   txRows.innerHTML = state.transactions.map(t=>`<tr><td>${html(t.transaction_date)}</td><td>${html(t.type)}</td><td>${html(t.category)}</td><td class="right">${money(t.amount)}</td><td><button class="red" onclick="deleteTransaction('${t.id}')">Delete</button></td></tr>`).join("") || `<tr><td colspan="5" class="center">No transactions</td></tr>`;
 }
@@ -2327,19 +2314,18 @@ function renderReports() {
   const invs=state.invoices.filter(i=>inRange(i.invoice_date,from,to));
   const pays=state.payments.filter(p=>inRange(p.payment_date,from,to));
   const exps=state.transactions.filter(t=>t.type==="Expense" && inRange(t.transaction_date,from,to));
-  repSales.textContent=money(invs.reduce((s,i)=>s+Number(i.paid_amount||0),0));
+  repSales.textContent=money(invs.reduce((s,i)=>s+Number(i.total||0),0));
   repPayments.textContent=money(pays.reduce((s,p)=>s+Number(p.amount||0),0));
   repExpenses.textContent=money(exps.reduce((s,t)=>s+Number(t.amount||0),0));
-  const paidSummary = paidProfitSummary(from, to);
-  const periodGross = paidSummary.grossProfit;
-  const periodExpenses = paidSummary.expenses;
+  const periodGross = invs.reduce((s,i)=>s+invoiceGrossProfit(i),0);
+  const periodExpenses = exps.reduce((s,t)=>s+Number(t.amount||0),0);
   repProfit.textContent=money(periodGross-periodExpenses);
-  const todayProfit = paidProfitSummary(today(), today());
-  const monthProfit = paidProfitSummary(monthStart(today()), today());
-  if (typeof todayGrossProfit !== "undefined") todayGrossProfit.textContent = money(todayProfit.grossProfit);
-  if (typeof todayNetProfit !== "undefined") todayNetProfit.textContent = money(todayProfit.netProfit);
-  if (typeof monthGrossProfit !== "undefined") monthGrossProfit.textContent = money(monthProfit.grossProfit);
-  if (typeof monthNetProfit !== "undefined") monthNetProfit.textContent = money(monthProfit.netProfit);
+  const todayProfit = profitForDateRange(today(), today());
+  const monthProfit = profitForDateRange(monthStart(today()), today());
+  if (typeof todayGrossProfit !== "undefined") todayGrossProfit.textContent = money(todayProfit.gross);
+  if (typeof todayNetProfit !== "undefined") todayNetProfit.textContent = money(todayProfit.net);
+  if (typeof monthGrossProfit !== "undefined") monthGrossProfit.textContent = money(monthProfit.gross);
+  if (typeof monthNetProfit !== "undefined") monthNetProfit.textContent = money(monthProfit.net);
   repOutstanding.innerHTML = state.invoices.filter(i=>Number(i.balance||0)>0).map(i=>{const c=state.customers.find(x=>x.id===i.customer_id)||{}; return `<tr><td><b>${html(i.invoice_no)}</b></td><td>${html(c.name||"")}</td><td class="right">${money(i.balance)}</td><td>${badge(i.status)}</td><td class="actions"><button class="quick-pay" onclick="markInvoicePaid('${i.id}')">Mark Paid</button><button class="secondary" onclick="markInvoicePartial('${i.id}')">Partial</button></td></tr>`}).join("") || `<tr><td colspan="5" class="center">No outstanding invoices</td></tr>`;
   repLowStock.innerHTML = state.products.filter(p=>Number(p.quantity)<=Number(p.min_quantity)).map(p=>`<tr><td>${html(p.code)}</td><td>${html(p.name)}</td><td class="right">${p.quantity}</td></tr>`).join("") || `<tr><td colspan="3" class="center">No low stock</td></tr>`;
 }
@@ -2380,71 +2366,92 @@ function shareWhatsApp() {
 function saveSettings() { company.name=setName.value; company.address=setAddress.value; company.phone=setPhone.value; company.email=setEmail.value; company.prefix=setPrefix.value||"LE/INV"; renderAll(); showToast("Preview settings updated."); }
 function renderSettings() { setName.value=company.name; setAddress.value=company.address; setPhone.value=company.phone; setEmail.value=company.email; setPrefix.value=company.prefix; }
 
-function invoicePaidRatio(inv) {
-  const total = Number(inv.total || 0);
-  const paid = Math.min(Number(inv.paid_amount || 0), total);
-  return total > 0 ? Math.max(0, Math.min(1, paid / total)) : 0;
+function getPaidBaseline() {
+  try { return JSON.parse(localStorage.getItem(BASELINE_KEY) || "{}"); }
+  catch(e) { return {}; }
 }
-function invoiceCostTotal(inv) {
-  return state.invoiceItems
-    .filter(x => x.invoice_id === inv.id)
-    .reduce((s, i) => s + Number(i.qty || 0) * Number(i.cost_price || 0), 0);
+function setPaidBaseline(map) {
+  localStorage.setItem(BASELINE_KEY, JSON.stringify(map || {}));
 }
-function paidSalesInRange(from, to) {
-  return state.invoices.filter(inv => {
+function initializePaidBaseline(force=false) {
+  if (!force && localStorage.getItem(BASELINE_KEY)) return;
+  const map = {};
+  (state.invoices || []).forEach(inv => map[inv.id] = Number(inv.paid_amount || 0));
+  setPaidBaseline(map);
+}
+function resetPaidSalesBaselineNow() {
+  initializePaidBaseline(true);
+  if (typeof showToast === "function") showToast("Paid Sales reset to 53,400 from now.");
+  else alert("Paid Sales reset to 53,400 from now.");
+  renderAll();
+}
+function newPaidAmount(inv) {
+  const map = getPaidBaseline();
+  return Math.max(0, Number(inv.paid_amount || 0) - Number(map[inv.id] || 0));
+}
+function newPaidSales(from="", to="") {
+  return (state.invoices || []).reduce((sum, inv) => {
     const d = inv.invoice_date || "";
+    if (from && d < from) return sum;
+    if (to && d > to) return sum;
+    return sum + newPaidAmount(inv);
+  }, 0);
+}
+function expenseTotal(from="", to="") {
+  return (state.transactions || []).filter(t => t.type === "Expense").filter(t => {
+    const d = t.transaction_date || "";
     if (from && d < from) return false;
     if (to && d > to) return false;
-    return Number(inv.paid_amount || 0) > 0;
-  });
+    return true;
+  }).reduce((sum, t) => sum + Number(t.amount || 0), 0);
 }
-function paidSummary(from="", to="") {
-  const rows = [];
-  let paidSales = 0;
-
-  state.invoices.forEach(inv => {
-    const d = inv.invoice_date || "";
-    if (from && d < from) return;
-    if (to && d > to) return;
-    const counted = paidAmountAfterBaseline(inv);
-    if (counted <= 0) return;
-    const c = state.customers.find(x => x.id === inv.customer_id) || {};
-    paidSales += counted;
-    rows.push({ inv, customer: c.name || "", counted, balance: Number(inv.balance || 0) });
-  });
-
-  const expenses = state.transactions
-    .filter(t => t.type === "Expense")
-    .filter(t => {
-      const d = t.transaction_date || "";
-      if (from && d < from) return false;
-      if (to && d > to) return false;
-      return true;
-    })
-    .reduce((s, t) => s + Number(t.amount || 0), 0);
-
-  return { paidSales, expenses, balance: paidSales - expenses, rows };
+function outstandingTotal() {
+  return (state.invoices || []).reduce((sum, inv) => sum + Math.max(0, Number(inv.balance || 0)), 0);
 }
+function monthStart(dateText) {
+  const d = dateText || today();
+  return d.slice(0, 8) + "01";
+}
+
 
 function renderProfitSummary() {
   if (typeof profitFrom === "undefined") return;
   const from = profitFrom.value;
   const to = profitTo.value;
-  const s = paidSummary(from, to);
-  const totalPaidSales = BASELINE_PAID_SALES + s.paidSales;
-  const outstanding = state.invoices.reduce((sum, inv) => sum + Math.max(0, Number(inv.balance || 0)), 0);
+  const counted = newPaidSales(from, to);
+  const totalPaidSales = BASELINE_PAID_SALES + counted;
+  const expenses = expenseTotal(from, to);
+  const balance = totalPaidSales - expenses;
+  const outstanding = outstandingTotal();
 
   profitPaidSales.textContent = money(totalPaidSales);
-  profitExpenses.textContent = money(s.expenses);
-  profitBalance.textContent = money(totalPaidSales - s.expenses);
+  profitExpenses.textContent = money(expenses);
+  profitBalance.textContent = money(balance);
   profitOutstanding.textContent = money(outstanding);
-  profitTodaySales.textContent = money(paidSalesAfterBaseline(today(), today()));
-  profitMonthSales.textContent = money(paidSalesAfterBaseline(monthStart(today()), today()));
+  profitTodaySales.textContent = money(newPaidSales(today(), today()));
+  profitMonthSales.textContent = money(newPaidSales(monthStart(today()), today()));
 
-  profitRows.innerHTML = s.rows.map(r => `<tr><td>${html(r.inv.invoice_date)}</td><td><b>${html(r.inv.invoice_no)}</b></td><td>${html(r.customer)}</td><td class="right">${money(r.counted)}</td><td class="right">${money(r.balance)}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No new paid invoices for this period</td></tr>`;
+  const rows = (state.invoices || []).filter(inv => {
+    const d = inv.invoice_date || "";
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return newPaidAmount(inv) > 0;
+  }).map(inv => {
+    const c = (state.customers || []).find(x => x.id === inv.customer_id) || {};
+    return `<tr><td>${html(inv.invoice_date)}</td><td><b>${html(inv.invoice_no)}</b></td><td>${html(c.name || "")}</td><td class="right">${money(newPaidAmount(inv))}</td><td class="right">${money(inv.balance)}</td></tr>`;
+  }).join("");
+
+  profitRows.innerHTML = rows || `<tr><td colspan="5" class="center">No new paid invoices for this period</td></tr>`;
+}
+
+function syncSelectedSlipInvoices() {
+  if (typeof slipInvoicesSelect === "undefined") return;
+  const selected = Array.from(slipInvoicesSelect.selectedOptions).map(o => o.value);
+  if (selected.length) slipInvoiceNumbers.value = selected.join(", ");
 }
 
 async function uploadBankSlip() {
+  if (typeof slipFile === "undefined") return;
   const file = slipFile.files && slipFile.files[0];
   if (!file) return alert("Please choose a slip file.");
   syncSelectedSlipInvoices();
@@ -2464,33 +2471,25 @@ async function uploadBankSlip() {
     slipAmount.value = "";
     slipReference.value = "";
     slipFile.value = "";
-    if (slipInvoicesSelect) Array.from(slipInvoicesSelect.options).forEach(o => o.selected = false);
-    showToast ? showToast("Bank slip uploaded.") : alert("Bank slip uploaded.");
+    Array.from(slipInvoicesSelect.options).forEach(o => o.selected = false);
+    if (typeof showToast === "function") showToast("Bank slip uploaded.");
+    else alert("Bank slip uploaded.");
     await loadAll();
   };
   reader.readAsDataURL(file);
 }
 
-function syncSelectedSlipInvoices() {
-  if (typeof slipInvoicesSelect === "undefined") return;
-  const selected = Array.from(slipInvoicesSelect.selectedOptions).map(o => o.value);
-  if (selected.length) slipInvoiceNumbers.value = selected.join(", ");
-}
-
 function renderBankSlips() {
   if (typeof bankSlipRows === "undefined") return;
-  const paidInvoices = state.invoices
-    .filter(inv => Number(inv.paid_amount || 0) > 0)
-    .sort((a,b) => String(b.invoice_date || "").localeCompare(String(a.invoice_date || "")));
-
+  const paidInvoices = (state.invoices || []).filter(inv => Number(inv.paid_amount || 0) > 0);
   slipInvoicesSelect.innerHTML = paidInvoices.map(inv => {
-    const c = state.customers.find(x => x.id === inv.customer_id) || {};
+    const c = (state.customers || []).find(x => x.id === inv.customer_id) || {};
     return `<option value="${html(inv.invoice_no)}">${html(inv.invoice_no)} | ${html(c.name || "")} | Paid: ${money(inv.paid_amount)}</option>`;
   }).join("");
-
   slipInvoicesSelect.onchange = syncSelectedSlipInvoices;
 
-  bankSlipRows.innerHTML = state.bankSlips.map(s => `<tr><td>${html((s.uploaded_at || "").slice(0,10))}</td><td>${html(s.invoice_numbers || "")}</td><td>${html(s.reference || "")}</td><td class="right">${money(s.amount)}</td><td>${s.file_data ? `<a href="${s.file_data}" download="${html(s.file_name || "slip")}" target="_blank">Open</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No bank slips uploaded</td></tr>`;
+  const slips = state.bankSlips || [];
+  bankSlipRows.innerHTML = slips.map(s => `<tr><td>${html((s.uploaded_at || "").slice(0,10))}</td><td>${html(s.invoice_numbers || "")}</td><td>${html(s.reference || "")}</td><td class="right">${money(s.amount)}</td><td>${s.file_data ? `<a href="${s.file_data}" download="${html(s.file_name || "slip")}" target="_blank">Open</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No bank slips uploaded</td></tr>`;
 }
 
 function renderDashboard() {
@@ -3565,8 +3564,7 @@ function renderAll() {
       <div class="grid grid-4">
         <div class="card metric"><div><div class="label">Customers</div><div class="value" id="mCustomers">0</div></div><div class="icon">👥</div></div>
         <div class="card metric"><div><div class="label">Stock Value</div><div class="value" id="mStockValue">0.00</div></div><div class="icon">📦</div></div>
-        <div class="card metric"><div><div class="label">Paid Sales</div><div class="value" id="mSales">0.00</div></div><div class="icon">💵</div></div>
-        
+        <div class="card metric"><div><div class="label">Paid Sales</div><div class="value" id="mSales">0.00</div></div><div class="icon">🧾</div></div>
         <div class="card metric"><div><div class="label">Outstanding</div><div class="value" id="mDue">0.00</div></div><div class="icon">💰</div></div>
       </div>
 
@@ -3580,7 +3578,7 @@ function renderAll() {
           <button class="green" onclick="document.querySelectorAll('nav button')[2].click(); openProduct()">Add Stock</button>
           <button class="amber" onclick="document.querySelectorAll('nav button')[3].click(); newInvoice()">New Invoice</button>
           <button class="secondary" onclick="document.querySelectorAll('nav button')[4].click(); newQuotation()">New Quotation</button>
-          <button class="secondary" onclick="show('profit_summary', document.querySelector('nav button[onclick*=profit_summary]'))">View Profit Summary</button>
+          <button class="secondary" onclick="document.querySelectorAll('nav button')[8].click()">View Reports</button>
         </div>
       </div>
 
@@ -3764,14 +3762,15 @@ function renderAll() {
       </div>
     </section>
 
+
     <section id="profit_summary" class="section">
       <div class="card no-print">
         <h3>Paid Sales & Expenses Summary</h3>
-        <p style="color:#64748b;margin-top:-6px">Only new paid amounts after the 53,400 baseline are counted. Unpaid invoices are excluded.</p>
+        <p style="color:#64748b;margin-top:-6px">Paid Sales starts from LKR 53,400. Only new paid invoice amounts after baseline are counted. Unpaid invoices are excluded.</p>
         <div class="grid grid-3">
           <div><label>From Date</label><input id="profitFrom" type="date" onchange="renderProfitSummary()"></div>
           <div><label>To Date</label><input id="profitTo" type="date" onchange="renderProfitSummary()"></div>
-          <div><label>Action</label><button class="secondary" onclick="renderProfitSummary()">Refresh</button></div>
+          <div><label>Action</label><button class="secondary" onclick="resetPaidSalesBaselineNow()">Reset 53,400 Baseline</button></div>
         </div>
       </div>
       <div class="grid grid-4" style="margin-top:15px">
@@ -3790,15 +3789,16 @@ function renderAll() {
       </div>
     </section>
 
+
     <section id="bank_slips" class="section">
       <div class="grid grid-2">
         <div class="card">
           <h3>Upload Bank Slip</h3>
           <label>Select Paid Invoice(s)</label>
           <select id="slipInvoicesSelect" multiple size="8"></select>
-          <small style="color:#64748b">Hold Ctrl on PC to select multiple invoices. On phone, tap multiple options if supported.</small>
+          <small style="color:#64748b">Select one or more paid invoices. You can also type invoice numbers manually below.</small>
           <label>Selected Invoice Numbers</label>
-          <input id="slipInvoiceNumbers" placeholder="Selected invoice numbers will appear here">
+          <input id="slipInvoiceNumbers" placeholder="Example: LE/INV/00001, LE/INV/00002">
           <label>Amount</label>
           <input id="slipAmount" type="number" min="0" step="0.01">
           <label>Bank / Reference</label>
@@ -3827,16 +3827,16 @@ function renderAll() {
     </section>
 
     <section id="accounts" class="section">
-      <div class="grid grid-2">
+      <div class="grid grid-3">
         <div class="card metric"><div><div class="label">Paid Sales</div><div class="value" id="accIncome">0.00</div></div><div class="icon">📈</div></div>
         <div class="card metric"><div><div class="label">Expenses</div><div class="value" id="accExpenses">0.00</div></div><div class="icon">📉</div></div>
-        
+        <div class="card metric"><div><div class="label">Balance After Expenses</div><div class="value" id="accProfit">0.00</div></div><div class="icon">✅</div></div>
       </div>
       <div class="grid grid-4" style="margin-top:15px">
-        <div class="card metric"><div><div class="label">Today Paid Sales</div><div class="value" id="accTodayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
-        <div class="card metric"><div><div class="label">Today Balance</div><div class="value" id="accTodayNetProfit">0.00</div></div><div class="icon">✅</div></div>
-        <div class="card metric"><div><div class="label">Month Paid Sales</div><div class="value" id="accMonthGrossProfit">0.00</div></div><div class="icon">📈</div></div>
-        <div class="card metric"><div><div class="label">Month Balance</div><div class="value" id="accMonthNetProfit">0.00</div></div><div class="icon">💰</div></div>
+        <div class="card metric"><div><div class="label">Today Gross Profit</div><div class="value" id="accTodayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
+        <div class="card metric"><div><div class="label">Today Net Profit</div><div class="value" id="accTodayNetProfit">0.00</div></div><div class="icon">✅</div></div>
+        <div class="card metric"><div><div class="label">Month Gross Profit</div><div class="value" id="accMonthGrossProfit">0.00</div></div><div class="icon">📈</div></div>
+        <div class="card metric"><div><div class="label">Month Net Profit</div><div class="value" id="accMonthNetProfit">0.00</div></div><div class="icon">💰</div></div>
       </div>
       <div class="grid grid-2" style="margin-top:15px">
         <div class="card">
@@ -3878,7 +3878,7 @@ function renderAll() {
 
 <script>
 const BASELINE_PAID_SALES = 53400;
-const PAID_BASELINE_VERSION = "vip-baseline-53400-2026-05-27-v3";
+const BASELINE_KEY = "lucky_vip_paid_baseline_v1";
 const SUPABASE_URL = "https://kvzozqljwucqbqkvhsqo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vnP8fXOE-UIevlvoW_Q9Pg_JDDvYAGA";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3944,20 +3944,6 @@ async function api(action) {
   }
 }
 
-async function optionalApi(action, fallback=[]) {
-  try {
-    const result = await action();
-    if (result.error) {
-      console.warn("Optional table/query skipped:", result.error.message);
-      return fallback;
-    }
-    return result.data || fallback;
-  } catch (e) {
-    console.warn("Optional table/query skipped:", e.message);
-    return fallback;
-  }
-}
-
 
 let currentSession = null;
 
@@ -4005,38 +3991,40 @@ db.auth.onAuthStateChange((_event, session) => {
   currentSession = session;
 });
 
+
+async function optionalApi(action, fallback=[]) {
+  try {
+    const result = await action();
+    if (result.error) return fallback;
+    return result.data || fallback;
+  } catch (e) {
+    console.warn("Optional data skipped:", e.message);
+    return fallback;
+  }
+}
 async function loadAll() {
   if (!currentSession) return startApp();
   statusMsg("Loading online data...");
-  try {
-    const [customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases] = await Promise.all([
-      api(()=>db.from("customers").select("*").order("created_at", {ascending:false})),
-      api(()=>db.from("products").select("*").order("created_at", {ascending:false})),
-      api(()=>db.from("invoices").select("*").order("created_at", {ascending:false})),
-      api(()=>db.from("invoice_items").select("*")),
-      api(()=>db.from("transactions").select("*").order("created_at", {ascending:false})),
-      api(()=>db.from("profiles").select("*").order("created_at", {ascending:false})),
-      optionalApi(()=>db.from("quotations").select("*").order("created_at", {ascending:false}), []),
-      optionalApi(()=>db.from("quotation_items").select("*"), []),
-      optionalApi(()=>db.from("payments").select("*").order("payment_date", {ascending:false}), []),
-      optionalApi(()=>db.from("purchases").select("*").order("purchase_date", {ascending:false}), [])
-    ]);
-
-    const bankSlips = await optionalApi(()=>db.from("bank_slips").select("*").order("uploaded_at", {ascending:false}), []);
-
-    state = { customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases, bankSlips };
-
-    if (typeof initializePaidSalesBaseline === "function") initializePaidSalesBaseline();
-    if (!invoice.no) newInvoice(false);
-    if (typeof quotation !== "undefined" && !quotation.no && typeof newQuotation === "function") newQuotation(false);
-    if (typeof receipt !== "undefined" && !receipt.no && typeof newReceipt === "function") newReceipt(false);
-
-    renderAll();
-    statusMsg("Online database connected. Data is saved in Supabase.");
-  } catch (e) {
-    console.error("Load failed:", e);
-    statusMsg("Loading failed: " + e.message + ". Check Supabase SQL tables/policies.", false);
-  }
+  const [customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases] = await Promise.all([
+    api(()=>db.from("customers").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("products").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("invoices").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("invoice_items").select("*")),
+    api(()=>db.from("transactions").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("profiles").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("quotations").select("*").order("created_at", {ascending:false})),
+    api(()=>db.from("quotation_items").select("*")),
+    api(()=>db.from("payments").select("*").order("payment_date", {ascending:false})),
+    api(()=>db.from("purchases").select("*").order("purchase_date", {ascending:false}))
+  ]);
+  state = { customers, products, invoices, invoiceItems, transactions, profiles, quotations, quotationItems, payments, purchases };
+  state.bankSlips = await optionalApi(()=>db.from("bank_slips").select("*").order("uploaded_at", {ascending:false}), []);
+  initializePaidBaseline();
+  if (!invoice.no) newInvoice(false);
+  if (!quotation.no) newQuotation(false);
+  if (!receipt.no) newReceipt(false);
+  renderAll();
+  statusMsg("Online database connected. Data is saved in Supabase.");
 }
 
 function show(id, btn) {
@@ -4044,7 +4032,7 @@ function show(id, btn) {
   byId(id).classList.add("active");
   document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
   btn.classList.add("active");
-  const titles={dashboard:["Dashboard","Online data connected to Supabase."],customers:["Customers","Add and manage unlimited customers."],stock:["Stock","Manage inventory, cost, selling price and low stock alerts."],invoices:["Invoices","Create professional invoices and reduce stock automatically."],quotations:["Quotations","Create estimates and convert approved quotations to invoices."],receipts:["Receipts","Record customer payments and print payment receipts."],purchases:["Purchases","Add supplier purchases and increase stock."],profit_summary:["Profit Summary","Paid profit minus expenses by day and month."],bank_slips:["Bank Slips","Upload bank payment slips and mention invoice numbers."],ledger:["Ledger","Customer statements with balances and payment history."],accounts:["Accounts","Track income, expenses and profit."],users:["Users","Manage system users and roles."],settings:["Settings","Update company details and invoice settings."]};
+  const titles={dashboard:["Dashboard","Online data connected to Supabase."],customers:["Customers","Add and manage unlimited customers."],stock:["Stock","Manage inventory, cost, selling price and low stock alerts."],invoices:["Invoices","Create professional invoices and reduce stock automatically."],quotations:["Quotations","Create estimates and convert approved quotations to invoices."],receipts:["Receipts","Record customer payments and print payment receipts."],purchases:["Purchases","Add supplier purchases and increase stock."],profit_summary:["Profit Summary","Paid sales from 53,400 baseline minus expenses."],bank_slips:["Bank Slips","Upload bank slips and link paid invoices."],ledger:["Ledger","Customer statements with balances and payment history."],accounts:["Accounts","Track income, expenses and profit."],users:["Users","Manage system users and roles."],settings:["Settings","Update company details and invoice settings."]};
   pageTitle.textContent=titles[id][0]; pageSub.textContent=titles[id][1];
 }
 function invoiceNumberValue(no) {
@@ -4204,19 +4192,16 @@ async function saveTransaction() {
 }
 async function deleteTransaction(id) { if(confirm("Delete transaction?")) { await api(()=>db.from("transactions").delete().eq("id",id)); await loadAll(); } }
 function renderAccounts() {
-  const paidSales = BASELINE_PAID_SALES + paidSalesAfterBaseline();
-  const exp = state.transactions.filter(t=>t.type==="Expense").reduce((s,t)=>s+Number(t.amount||0),0);
-  const todayS = paidSummary(today(), today());
-  const monthS = paidSummary(monthStart(today()), today());
+  const paidSales = BASELINE_PAID_SALES + newPaidSales();
+  const exp = expenseTotal();
+  accIncome.textContent = money(paidSales);
+  accExpenses.textContent = money(exp);
+  if (typeof accProfit !== "undefined") accProfit.textContent = money(paidSales - exp);
 
-  accIncome.textContent=money(paidSales);
-  accExpenses.textContent=money(exp);
-  if (typeof accProfit !== "undefined") accProfit.textContent=money(paidSales-exp);
-
-  if (typeof accTodayGrossProfit !== "undefined") accTodayGrossProfit.textContent = money(todayS.paidSales);
-  if (typeof accTodayNetProfit !== "undefined") accTodayNetProfit.textContent = money(todayS.balance);
-  if (typeof accMonthGrossProfit !== "undefined") accMonthGrossProfit.textContent = money(monthS.paidSales);
-  if (typeof accMonthNetProfit !== "undefined") accMonthNetProfit.textContent = money(monthS.balance);
+  if (typeof accTodayGrossProfit !== "undefined") accTodayGrossProfit.textContent = money(newPaidSales(today(), today()));
+  if (typeof accTodayNetProfit !== "undefined") accTodayNetProfit.textContent = money(newPaidSales(today(), today()) - expenseTotal(today(), today()));
+  if (typeof accMonthGrossProfit !== "undefined") accMonthGrossProfit.textContent = money(newPaidSales(monthStart(today()), today()));
+  if (typeof accMonthNetProfit !== "undefined") accMonthNetProfit.textContent = money(newPaidSales(monthStart(today()), today()) - expenseTotal(monthStart(today()), today()));
 
   txRows.innerHTML = state.transactions.map(t=>`<tr><td>${html(t.transaction_date)}</td><td>${html(t.type)}</td><td>${html(t.category)}</td><td class="right">${money(t.amount)}</td><td><button class="red" onclick="deleteTransaction('${t.id}')">Delete</button></td></tr>`).join("") || `<tr><td colspan="5" class="center">No transactions</td></tr>`;
 }
@@ -4850,19 +4835,18 @@ function renderReports() {
   const invs=state.invoices.filter(i=>inRange(i.invoice_date,from,to));
   const pays=state.payments.filter(p=>inRange(p.payment_date,from,to));
   const exps=state.transactions.filter(t=>t.type==="Expense" && inRange(t.transaction_date,from,to));
-  repSales.textContent=money(invs.reduce((s,i)=>s+Number(i.paid_amount||0),0));
+  repSales.textContent=money(invs.reduce((s,i)=>s+Number(i.total||0),0));
   repPayments.textContent=money(pays.reduce((s,p)=>s+Number(p.amount||0),0));
   repExpenses.textContent=money(exps.reduce((s,t)=>s+Number(t.amount||0),0));
-  const paidSummary = paidProfitSummary(from, to);
-  const periodGross = paidSummary.grossProfit;
-  const periodExpenses = paidSummary.expenses;
+  const periodGross = invs.reduce((s,i)=>s+invoiceGrossProfit(i),0);
+  const periodExpenses = exps.reduce((s,t)=>s+Number(t.amount||0),0);
   repProfit.textContent=money(periodGross-periodExpenses);
-  const todayProfit = paidProfitSummary(today(), today());
-  const monthProfit = paidProfitSummary(monthStart(today()), today());
-  if (typeof todayGrossProfit !== "undefined") todayGrossProfit.textContent = money(todayProfit.grossProfit);
-  if (typeof todayNetProfit !== "undefined") todayNetProfit.textContent = money(todayProfit.netProfit);
-  if (typeof monthGrossProfit !== "undefined") monthGrossProfit.textContent = money(monthProfit.grossProfit);
-  if (typeof monthNetProfit !== "undefined") monthNetProfit.textContent = money(monthProfit.netProfit);
+  const todayProfit = profitForDateRange(today(), today());
+  const monthProfit = profitForDateRange(monthStart(today()), today());
+  if (typeof todayGrossProfit !== "undefined") todayGrossProfit.textContent = money(todayProfit.gross);
+  if (typeof todayNetProfit !== "undefined") todayNetProfit.textContent = money(todayProfit.net);
+  if (typeof monthGrossProfit !== "undefined") monthGrossProfit.textContent = money(monthProfit.gross);
+  if (typeof monthNetProfit !== "undefined") monthNetProfit.textContent = money(monthProfit.net);
   repOutstanding.innerHTML = state.invoices.filter(i=>Number(i.balance||0)>0).map(i=>{const c=state.customers.find(x=>x.id===i.customer_id)||{}; return `<tr><td><b>${html(i.invoice_no)}</b></td><td>${html(c.name||"")}</td><td class="right">${money(i.balance)}</td><td>${badge(i.status)}</td><td class="actions"><button class="quick-pay" onclick="markInvoicePaid('${i.id}')">Mark Paid</button><button class="secondary" onclick="markInvoicePartial('${i.id}')">Partial</button></td></tr>`}).join("") || `<tr><td colspan="5" class="center">No outstanding invoices</td></tr>`;
   repLowStock.innerHTML = state.products.filter(p=>Number(p.quantity)<=Number(p.min_quantity)).map(p=>`<tr><td>${html(p.code)}</td><td>${html(p.name)}</td><td class="right">${p.quantity}</td></tr>`).join("") || `<tr><td colspan="3" class="center">No low stock</td></tr>`;
 }
@@ -4903,71 +4887,92 @@ function shareWhatsApp() {
 function saveSettings() { company.name=setName.value; company.address=setAddress.value; company.phone=setPhone.value; company.email=setEmail.value; company.prefix=setPrefix.value||"LE/INV"; renderAll(); showToast("Preview settings updated."); }
 function renderSettings() { setName.value=company.name; setAddress.value=company.address; setPhone.value=company.phone; setEmail.value=company.email; setPrefix.value=company.prefix; }
 
-function invoicePaidRatio(inv) {
-  const total = Number(inv.total || 0);
-  const paid = Math.min(Number(inv.paid_amount || 0), total);
-  return total > 0 ? Math.max(0, Math.min(1, paid / total)) : 0;
+function getPaidBaseline() {
+  try { return JSON.parse(localStorage.getItem(BASELINE_KEY) || "{}"); }
+  catch(e) { return {}; }
 }
-function invoiceCostTotal(inv) {
-  return state.invoiceItems
-    .filter(x => x.invoice_id === inv.id)
-    .reduce((s, i) => s + Number(i.qty || 0) * Number(i.cost_price || 0), 0);
+function setPaidBaseline(map) {
+  localStorage.setItem(BASELINE_KEY, JSON.stringify(map || {}));
 }
-function paidSalesInRange(from, to) {
-  return state.invoices.filter(inv => {
+function initializePaidBaseline(force=false) {
+  if (!force && localStorage.getItem(BASELINE_KEY)) return;
+  const map = {};
+  (state.invoices || []).forEach(inv => map[inv.id] = Number(inv.paid_amount || 0));
+  setPaidBaseline(map);
+}
+function resetPaidSalesBaselineNow() {
+  initializePaidBaseline(true);
+  if (typeof showToast === "function") showToast("Paid Sales reset to 53,400 from now.");
+  else alert("Paid Sales reset to 53,400 from now.");
+  renderAll();
+}
+function newPaidAmount(inv) {
+  const map = getPaidBaseline();
+  return Math.max(0, Number(inv.paid_amount || 0) - Number(map[inv.id] || 0));
+}
+function newPaidSales(from="", to="") {
+  return (state.invoices || []).reduce((sum, inv) => {
     const d = inv.invoice_date || "";
+    if (from && d < from) return sum;
+    if (to && d > to) return sum;
+    return sum + newPaidAmount(inv);
+  }, 0);
+}
+function expenseTotal(from="", to="") {
+  return (state.transactions || []).filter(t => t.type === "Expense").filter(t => {
+    const d = t.transaction_date || "";
     if (from && d < from) return false;
     if (to && d > to) return false;
-    return Number(inv.paid_amount || 0) > 0;
-  });
+    return true;
+  }).reduce((sum, t) => sum + Number(t.amount || 0), 0);
 }
-function paidSummary(from="", to="") {
-  const rows = [];
-  let paidSales = 0;
-
-  state.invoices.forEach(inv => {
-    const d = inv.invoice_date || "";
-    if (from && d < from) return;
-    if (to && d > to) return;
-    const counted = paidAmountAfterBaseline(inv);
-    if (counted <= 0) return;
-    const c = state.customers.find(x => x.id === inv.customer_id) || {};
-    paidSales += counted;
-    rows.push({ inv, customer: c.name || "", counted, balance: Number(inv.balance || 0) });
-  });
-
-  const expenses = state.transactions
-    .filter(t => t.type === "Expense")
-    .filter(t => {
-      const d = t.transaction_date || "";
-      if (from && d < from) return false;
-      if (to && d > to) return false;
-      return true;
-    })
-    .reduce((s, t) => s + Number(t.amount || 0), 0);
-
-  return { paidSales, expenses, balance: paidSales - expenses, rows };
+function outstandingTotal() {
+  return (state.invoices || []).reduce((sum, inv) => sum + Math.max(0, Number(inv.balance || 0)), 0);
 }
+function monthStart(dateText) {
+  const d = dateText || today();
+  return d.slice(0, 8) + "01";
+}
+
 
 function renderProfitSummary() {
   if (typeof profitFrom === "undefined") return;
   const from = profitFrom.value;
   const to = profitTo.value;
-  const s = paidSummary(from, to);
-  const totalPaidSales = BASELINE_PAID_SALES + s.paidSales;
-  const outstanding = state.invoices.reduce((sum, inv) => sum + Math.max(0, Number(inv.balance || 0)), 0);
+  const counted = newPaidSales(from, to);
+  const totalPaidSales = BASELINE_PAID_SALES + counted;
+  const expenses = expenseTotal(from, to);
+  const balance = totalPaidSales - expenses;
+  const outstanding = outstandingTotal();
 
   profitPaidSales.textContent = money(totalPaidSales);
-  profitExpenses.textContent = money(s.expenses);
-  profitBalance.textContent = money(totalPaidSales - s.expenses);
+  profitExpenses.textContent = money(expenses);
+  profitBalance.textContent = money(balance);
   profitOutstanding.textContent = money(outstanding);
-  profitTodaySales.textContent = money(paidSalesAfterBaseline(today(), today()));
-  profitMonthSales.textContent = money(paidSalesAfterBaseline(monthStart(today()), today()));
+  profitTodaySales.textContent = money(newPaidSales(today(), today()));
+  profitMonthSales.textContent = money(newPaidSales(monthStart(today()), today()));
 
-  profitRows.innerHTML = s.rows.map(r => `<tr><td>${html(r.inv.invoice_date)}</td><td><b>${html(r.inv.invoice_no)}</b></td><td>${html(r.customer)}</td><td class="right">${money(r.counted)}</td><td class="right">${money(r.balance)}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No new paid invoices for this period</td></tr>`;
+  const rows = (state.invoices || []).filter(inv => {
+    const d = inv.invoice_date || "";
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return newPaidAmount(inv) > 0;
+  }).map(inv => {
+    const c = (state.customers || []).find(x => x.id === inv.customer_id) || {};
+    return `<tr><td>${html(inv.invoice_date)}</td><td><b>${html(inv.invoice_no)}</b></td><td>${html(c.name || "")}</td><td class="right">${money(newPaidAmount(inv))}</td><td class="right">${money(inv.balance)}</td></tr>`;
+  }).join("");
+
+  profitRows.innerHTML = rows || `<tr><td colspan="5" class="center">No new paid invoices for this period</td></tr>`;
+}
+
+function syncSelectedSlipInvoices() {
+  if (typeof slipInvoicesSelect === "undefined") return;
+  const selected = Array.from(slipInvoicesSelect.selectedOptions).map(o => o.value);
+  if (selected.length) slipInvoiceNumbers.value = selected.join(", ");
 }
 
 async function uploadBankSlip() {
+  if (typeof slipFile === "undefined") return;
   const file = slipFile.files && slipFile.files[0];
   if (!file) return alert("Please choose a slip file.");
   syncSelectedSlipInvoices();
@@ -4987,33 +4992,25 @@ async function uploadBankSlip() {
     slipAmount.value = "";
     slipReference.value = "";
     slipFile.value = "";
-    if (slipInvoicesSelect) Array.from(slipInvoicesSelect.options).forEach(o => o.selected = false);
-    showToast ? showToast("Bank slip uploaded.") : alert("Bank slip uploaded.");
+    Array.from(slipInvoicesSelect.options).forEach(o => o.selected = false);
+    if (typeof showToast === "function") showToast("Bank slip uploaded.");
+    else alert("Bank slip uploaded.");
     await loadAll();
   };
   reader.readAsDataURL(file);
 }
 
-function syncSelectedSlipInvoices() {
-  if (typeof slipInvoicesSelect === "undefined") return;
-  const selected = Array.from(slipInvoicesSelect.selectedOptions).map(o => o.value);
-  if (selected.length) slipInvoiceNumbers.value = selected.join(", ");
-}
-
 function renderBankSlips() {
   if (typeof bankSlipRows === "undefined") return;
-  const paidInvoices = state.invoices
-    .filter(inv => Number(inv.paid_amount || 0) > 0)
-    .sort((a,b) => String(b.invoice_date || "").localeCompare(String(a.invoice_date || "")));
-
+  const paidInvoices = (state.invoices || []).filter(inv => Number(inv.paid_amount || 0) > 0);
   slipInvoicesSelect.innerHTML = paidInvoices.map(inv => {
-    const c = state.customers.find(x => x.id === inv.customer_id) || {};
+    const c = (state.customers || []).find(x => x.id === inv.customer_id) || {};
     return `<option value="${html(inv.invoice_no)}">${html(inv.invoice_no)} | ${html(c.name || "")} | Paid: ${money(inv.paid_amount)}</option>`;
   }).join("");
-
   slipInvoicesSelect.onchange = syncSelectedSlipInvoices;
 
-  bankSlipRows.innerHTML = state.bankSlips.map(s => `<tr><td>${html((s.uploaded_at || "").slice(0,10))}</td><td>${html(s.invoice_numbers || "")}</td><td>${html(s.reference || "")}</td><td class="right">${money(s.amount)}</td><td>${s.file_data ? `<a href="${s.file_data}" download="${html(s.file_name || "slip")}" target="_blank">Open</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No bank slips uploaded</td></tr>`;
+  const slips = state.bankSlips || [];
+  bankSlipRows.innerHTML = slips.map(s => `<tr><td>${html((s.uploaded_at || "").slice(0,10))}</td><td>${html(s.invoice_numbers || "")}</td><td>${html(s.reference || "")}</td><td class="right">${money(s.amount)}</td><td>${s.file_data ? `<a href="${s.file_data}" download="${html(s.file_name || "slip")}" target="_blank">Open</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No bank slips uploaded</td></tr>`;
 }
 
 function renderDashboard() {
@@ -5025,10 +5022,10 @@ function renderDashboard() {
   lowStock.innerHTML = lows.length ? lows.map(p=>`<div><b>${html(p.code)}</b> - ${html(p.name)}: <span class="low">${p.quantity}</span> left</div>`).join("") : `<span class="muted">No low stock items.</span>`;
   recentInvoices.innerHTML = state.invoices.slice(0,6).map(inv=>{ const c=state.customers.find(x=>x.id===inv.customer_id)||{}; return `<tr><td>${html(inv.invoice_no)}</td><td>${html(c.name||"")}</td><td class="right">${money(inv.total)}</td><td>${badge(inv.status)}</td></tr>`; }).join("") || `<tr><td colspan="4" class="center">No invoices</td></tr>`;
 }
-function renderAll() { renderCustomers(); renderStock(); renderInvoicePaper(); renderInvoiceHistory(); renderQuotationPaper(); renderQuotationHistory(); renderReceiptPaper(); renderReceiptHistory(); renderPurchases(); renderLedger(); renderAccounts(); renderUsers(); renderSettings(); renderDashboard(); renderProfitSummary(); renderBankSlips(); renderSignature(); }
+function renderAll() { renderCustomers(); renderStock(); renderInvoicePaper(); renderInvoiceHistory(); renderQuotationPaper(); renderQuotationHistory(); renderReceiptPaper(); renderReceiptHistory(); renderPurchases(); renderReports(); renderLedger(); renderAccounts(); renderUsers(); renderSettings(); renderDashboard(); renderSignature(); }
 txDate.value=today();
 if (typeof purDate !== "undefined") purDate.value=today();
-if (typeof profitFrom !== "undefined") { profitFrom.value=today().slice(0,8)+"01"; profitTo.value=today(); }
+if (typeof reportFrom !== "undefined") { reportFrom.value=today().slice(0,8)+"01"; reportTo.value=today(); }
 startApp();
 </script>
 </body>
