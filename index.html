@@ -1022,7 +1022,6 @@
       <button onclick="show('quotations',this)">📄 Quotations</button>
       <button onclick="show('receipts',this)">🧾 Receipts</button>
       <button onclick="show('purchases',this)">🚚 Purchases</button>
-      <button onclick="show('reports',this)">📈 Reports</button>
       <button onclick="show('profit_summary',this)">💹 Profit Summary</button>
       <button onclick="show('bank_slips',this)">🏦 Bank Slips</button>
       <button onclick="show('ledger',this)">📒 Ledger</button>
@@ -1058,7 +1057,7 @@
           <button class="green" onclick="document.querySelectorAll('nav button')[2].click(); openProduct()">Add Stock</button>
           <button class="amber" onclick="document.querySelectorAll('nav button')[3].click(); newInvoice()">New Invoice</button>
           <button class="secondary" onclick="document.querySelectorAll('nav button')[4].click(); newQuotation()">New Quotation</button>
-          <button class="secondary" onclick="document.querySelectorAll('nav button')[8].click()">View Reports</button>
+          <button class="secondary" onclick="show('profit_summary', document.querySelector('nav button[onclick*=profit_summary]'))">View Profit Summary</button>
         </div>
       </div>
 
@@ -1242,36 +1241,6 @@
       </div>
     </section>
 
-    <section id="reports" class="section">
-      <div class="card no-print">
-        <h3>Reports & Exports</h3>
-        <div class="grid grid-3">
-          <div><label>From Date</label><input id="reportFrom" type="date" onchange="renderReports()"></div>
-          <div><label>To Date</label><input id="reportTo" type="date" onchange="renderReports()"></div>
-          <div><label>Export</label><button class="secondary" onclick="exportCSV()">Export CSV</button></div>
-        </div>
-      </div>
-      
-      <div class="grid grid-4" style="margin-top:15px">
-        <div class="card metric"><div><div class="label">Today Gross Profit</div><div class="value" id="todayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
-        <div class="card metric"><div><div class="label">Today Net Profit</div><div class="value" id="todayNetProfit">0.00</div></div><div class="icon">✅</div></div>
-        <div class="card metric"><div><div class="label">Month Gross Profit</div><div class="value" id="monthGrossProfit">0.00</div></div><div class="icon">📈</div></div>
-        <div class="card metric"><div><div class="label">Month Net Profit</div><div class="value" id="monthNetProfit">0.00</div></div><div class="icon">💰</div></div>
-      </div>
-
-      <div class="grid grid-4" style="margin-top:15px">
-        <div class="card metric"><div><div class="label">Period Sales</div><div class="value" id="repSales">0.00</div></div><div class="icon">💵</div></div>
-        <div class="card metric"><div><div class="label">Period Payments</div><div class="value" id="repPayments">0.00</div></div><div class="icon">✅</div></div>
-        <div class="card metric"><div><div class="label">Period Expenses</div><div class="value" id="repExpenses">0.00</div></div><div class="icon">📉</div></div>
-        <div class="card metric"><div><div class="label">Estimated Profit</div><div class="value" id="repProfit">0.00</div></div><div class="icon">📈</div></div>
-      </div>
-      <div class="grid grid-2" style="margin-top:15px">
-        <div class="card soft-card"><h3>Unpaid / Partial Invoices</h3><div class="table-wrap"><table><thead><tr><th>No</th><th>Customer</th><th class="right">Balance</th><th>Status</th><th>Payment Action</th></tr></thead><tbody id="repOutstanding"></tbody></table></div></div>
-        <div class="card soft-card"><h3>Low Stock Report</h3><div class="table-wrap"><table><thead><tr><th>Code</th><th>Description</th><th class="right">Qty</th></tr></thead><tbody id="repLowStock"></tbody></table></div></div>
-      </div>
-    </section>
-
-
     <section id="profit_summary" class="section">
       <div class="card no-print">
         <h3>Profit Summary</h3>
@@ -1334,10 +1303,10 @@
     </section>
 
     <section id="accounts" class="section">
-      <div class="grid grid-3">
+      <div class="grid grid-2">
         <div class="card metric"><div><div class="label">Income</div><div class="value" id="accIncome">0.00</div></div><div class="icon">📈</div></div>
         <div class="card metric"><div><div class="label">Expenses</div><div class="value" id="accExpenses">0.00</div></div><div class="icon">📉</div></div>
-        <div class="card metric"><div><div class="label">Net Profit</div><div class="value" id="accProfit">0.00</div></div><div class="icon">✅</div></div>
+        
       </div>
       <div class="grid grid-4" style="margin-top:15px">
         <div class="card metric"><div><div class="label">Today Gross Profit</div><div class="value" id="accTodayGrossProfit">0.00</div></div><div class="icon">📊</div></div>
@@ -1384,6 +1353,7 @@
 <div id="modal" class="modal no-print"><div class="modal-box"><div class="modal-head"><h3 id="modalTitle">Form</h3><button class="secondary" onclick="closeModal()">Close</button></div><div id="modalBody"></div></div></div>
 
 <script>
+const BASELINE_PAID_SALES = 53400;
 const SUPABASE_URL = "https://kvzozqljwucqbqkvhsqo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vnP8fXOE-UIevlvoW_Q9Pg_JDDvYAGA";
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1525,7 +1495,7 @@ function show(id, btn) {
   byId(id).classList.add("active");
   document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
   btn.classList.add("active");
-  const titles={dashboard:["Dashboard","Online data connected to Supabase."],customers:["Customers","Add and manage unlimited customers."],stock:["Stock","Manage inventory, cost, selling price and low stock alerts."],invoices:["Invoices","Create professional invoices and reduce stock automatically."],quotations:["Quotations","Create estimates and convert approved quotations to invoices."],receipts:["Receipts","Record customer payments and print payment receipts."],purchases:["Purchases","Add supplier purchases and increase stock."],reports:["Reports","Paid sales, payments, expenses, outstanding and low-stock reports."],profit_summary:["Profit Summary","Paid profit minus expenses by day and month."],bank_slips:["Bank Slips","Upload bank payment slips and mention invoice numbers."],ledger:["Ledger","Customer statements with balances and payment history."],accounts:["Accounts","Track income, expenses and profit."],users:["Users","Manage system users and roles."],settings:["Settings","Update company details and invoice settings."]};
+  const titles={dashboard:["Dashboard","Online data connected to Supabase."],customers:["Customers","Add and manage unlimited customers."],stock:["Stock","Manage inventory, cost, selling price and low stock alerts."],invoices:["Invoices","Create professional invoices and reduce stock automatically."],quotations:["Quotations","Create estimates and convert approved quotations to invoices."],receipts:["Receipts","Record customer payments and print payment receipts."],purchases:["Purchases","Add supplier purchases and increase stock."],profit_summary:["Profit Summary","Paid profit minus expenses by day and month."],bank_slips:["Bank Slips","Upload bank payment slips and mention invoice numbers."],ledger:["Ledger","Customer statements with balances and payment history."],accounts:["Accounts","Track income, expenses and profit."],users:["Users","Manage system users and roles."],settings:["Settings","Update company details and invoice settings."]};
   pageTitle.textContent=titles[id][0]; pageSub.textContent=titles[id][1];
 }
 function invoiceNumberValue(no) {
@@ -1688,7 +1658,7 @@ function renderAccounts() {
   const invoiceIncome = state.invoices.reduce((s,inv)=>s+Number(inv.paid_amount||0),0);
   const txIncome = state.transactions.filter(t=>t.type==="Income" && t.category !== "Invoice Payment").reduce((s,t)=>s+Number(t.amount||0),0);
   const exp = state.transactions.filter(t=>t.type==="Expense").reduce((s,t)=>s+Number(t.amount||0),0);
-  accIncome.textContent=money(invoiceIncome+txIncome); accExpenses.textContent=money(exp); accProfit.textContent=money(invoiceIncome+txIncome-exp);
+  accIncome.textContent=money(BASELINE_PAID_SALES + invoiceIncome + txIncome); accExpenses.textContent=money(exp); if (typeof accProfit !== "undefined") accProfit.textContent=money(BASELINE_PAID_SALES + invoiceIncome + txIncome - exp);
   const todayProfit = paidProfitSummary(today(), today());
   const monthProfit = paidProfitSummary(monthStart(today()), today());
   if (typeof accTodayGrossProfit !== "undefined") accTodayGrossProfit.textContent = money(todayProfit.grossProfit);
@@ -2422,7 +2392,7 @@ function paidProfitSummary(from, to) {
       return true;
     })
     .reduce((s, t) => s + Number(t.amount || 0), 0);
-  return { paidSales, costCounted, grossProfit, expenses, netProfit: grossProfit - expenses, rows };
+  return { paidSales: paidSales + BASELINE_PAID_SALES, costCounted, grossProfit: grossProfit + BASELINE_PAID_SALES, expenses, netProfit: grossProfit + BASELINE_PAID_SALES - expenses, rows };
 }
 function renderProfitSummary() {
   if (typeof profitFrom === "undefined") return;
@@ -2475,10 +2445,9 @@ function renderDashboard() {
   lowStock.innerHTML = lows.length ? lows.map(p=>`<div><b>${html(p.code)}</b> - ${html(p.name)}: <span class="low">${p.quantity}</span> left</div>`).join("") : `<span class="muted">No low stock items.</span>`;
   recentInvoices.innerHTML = state.invoices.slice(0,6).map(inv=>{ const c=state.customers.find(x=>x.id===inv.customer_id)||{}; return `<tr><td>${html(inv.invoice_no)}</td><td>${html(c.name||"")}</td><td class="right">${money(inv.total)}</td><td>${badge(inv.status)}</td></tr>`; }).join("") || `<tr><td colspan="4" class="center">No invoices</td></tr>`;
 }
-function renderAll() { renderCustomers(); renderStock(); renderInvoicePaper(); renderInvoiceHistory(); renderQuotationPaper(); renderQuotationHistory(); renderReceiptPaper(); renderReceiptHistory(); renderPurchases(); renderReports(); renderLedger(); renderAccounts(); renderUsers(); renderSettings(); renderDashboard(); renderProfitSummary(); renderBankSlips(); renderSignature(); }
+function renderAll() { renderCustomers(); renderStock(); renderInvoicePaper(); renderInvoiceHistory(); renderQuotationPaper(); renderQuotationHistory(); renderReceiptPaper(); renderReceiptHistory(); renderPurchases(); renderLedger(); renderAccounts(); renderUsers(); renderSettings(); renderDashboard(); renderProfitSummary(); renderBankSlips(); renderSignature(); }
 txDate.value=today();
 if (typeof purDate !== "undefined") purDate.value=today();
-if (typeof reportFrom !== "undefined") { reportFrom.value=today().slice(0,8)+"01"; reportTo.value=today(); }
 if (typeof profitFrom !== "undefined") { profitFrom.value=today().slice(0,8)+"01"; profitTo.value=today(); }
 startApp();
 </script>
