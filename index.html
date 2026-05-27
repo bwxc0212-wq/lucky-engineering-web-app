@@ -3,263 +3,164 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lucky Engineering - Cloud ERP System</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Lucky Engineering Online System</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-    :root { font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { background: radial-gradient(circle at top left, rgba(59,130,246,0.06), transparent 40rem), #f8fafc; }
-    .glass { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.8); }
-    .sidebar-grad { background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); }
+    :root { 
+      --bg:#f4f6f9; --card:#fff; --ink:#172033; --muted:#64748b; 
+      --line:#dbe3ef; --brand:#0f172a; --blue:#2563eb; --green:#059669; 
+      --red:#dc2626; --amber:#d97706; 
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter, Arial, sans-serif; }
+    .app { min-height:100vh; display:grid; grid-template-columns:270px 1fr; }
+    
+    /* ORIGINAL SIDEBAR STYLES */
+    .aside { background:var(--brand); color:#fff; padding:20px; display:flex; flex-direction:column; gap:20px; }
+    .brand-title { font-size:18px; font-weight:800; tracking:0.5px; color:#fff; text-decoration:none; margin-bottom:10px; }
+    .nav-group { display:flex; flex-direction:column; gap:4px; }
+    .nav-item { padding:10px 14px; color:#94a3b8; border-radius:8px; cursor:pointer; font-size:14px; font-weight:500; display:flex; items-center:center; gap:10px; transition:0.2s; }
+    .nav-item:hover, .nav-item.active { background:rgba(255,255,255,0.08); color:#fff; }
+    
+    .main { padding:30px; display:flex; flex-direction:column; gap:25px; max-width:1400px; margin:0 auto; w:100%; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.02); }
+    .grid-3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; }
+    
+    /* Global Elements */
+    table { width:100%; border-collapse:collapse; margin-top:10px; font-size:14px; }
+    th { background:#f8fafc; color:var(--muted); text-align:left; padding:12px; font-weight:600; border-bottom:1px solid var(--line); }
+    td { padding:12px; border-bottom:1px solid var(--line); vertical-align:middle; }
+    input, select, textarea { width:100%; padding:10px 14px; border:1px solid var(--line); border-radius:8px; outline:none; font-size:14px; transition:0.2s; background:#fff; }
+    input:focus, select:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+    .btn { background:var(--blue); color:#fff; padding:10px 20px; border:none; border-radius:8px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; font-size:14px; }
+    .btn-green { background:var(--green); }
+    .btn-red { background:var(--red); }
+    .pane { display:none; } .pane.active { display:block; }
   </style>
 </head>
-<body class="text-slate-900 min-h-screen flex flex-col">
+<body>
 
-  <div id="appLoader" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 hidden grid place-items-center">
-    <div class="bg-white p-6 rounded-2xl shadow-xl text-center font-bold flex flex-col items-center">
-      <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-3"></div>
-      <span class="text-sm text-slate-600">Cloud Syncing Live Data...</span>
-    </div>
-  </div>
-
-  <div class="flex-1 flex flex-col md:flex-row">
-    
-    <aside class="sidebar-grad text-white w-full md:w-64 flex flex-col p-4 space-y-6 shadow-xl shrink-0">
-      <div class="border-b border-slate-700/60 pb-4 text-center md:text-left md:px-2">
-        <h1 class="text-lg font-black tracking-tight text-blue-400">LUCKY ENGINEERING</h1>
-        <p class="text-xs text-slate-400 mt-0.5">Spare Parts & Accounts (Pvt) Ltd.</p>
-        <div class="inline-flex items-center space-x-1.5 bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-bold mt-3">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Supabase Cloud Connected</span>
-        </div>
-      </div>
-      
-      <nav class="flex-1 space-y-1">
-        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-3 bg-blue-600 text-white shadow-lg shadow-blue-600/20 transition-all">
-          <span>📊 Dashboard & Profit</span>
-        </button>
-        <button onclick="switchTab('inventory')" id="btn-inventory" class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition-all">
-          <span>📦 Stock Management</span>
-        </button>
-        <button onclick="switchTab('invoicing')" id="btn-invoicing" class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition-all">
-          <span>📝 Issue New Invoice</span>
-        </button>
-        <button onclick="switchTab('history')" id="btn-history" class="tab-btn w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center space-x-3 text-slate-300 hover:bg-slate-800 transition-all">
-          <span>🧾 Sales History & Slips</span>
-        </button>
-      </nav>
-    </aside>
-
-    <main class="flex-1 p-4 md:p-8 space-y-6 overflow-x-hidden">
-      
-      <section id="tab-dashboard" class="tab-content space-y-6">
-        <div class="glass p-6 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h2 class="text-2xl font-black tracking-tight">Financial Overview</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Real-time dynamic analysis from cloud database</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
-            <div>
-              <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue</p>
-              <h3 id="dash-sales" class="text-2xl font-black text-slate-800 mt-1">LKR 0.00</h3>
-            </div>
-            <div class="bg-blue-50 text-blue-600 p-3 rounded-xl font-bold text-xl">↗</div>
-          </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
-            <div>
-              <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Cost Price</p>
-              <h3 id="dash-cost" class="text-2xl font-black text-slate-800 mt-1">LKR 0.00</h3>
-            </div>
-            <div class="bg-amber-50 text-amber-600 p-3 rounded-xl font-bold text-xl">📉</div>
-          </div>
-          <div class="bg-white p-6 rounded-2xl border border-emerald-100 bg-emerald-50/20 shadow-sm flex justify-between items-center">
-            <div>
-              <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Net Profit (Selling - Cost)</p>
-              <h3 id="dash-profit" class="text-3xl font-black text-emerald-600 mt-1">LKR 0.00</h3>
-            </div>
-            <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl font-bold text-xl">💰</div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6">
-          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <h4 class="text-sm font-black text-slate-700 uppercase tracking-wider mb-3">⚠️ Low Stock Running Alert</h4>
-            <div id="dash-lowstock" class="space-y-2">
-              <p class="text-xs text-slate-400 italic">Checking active stock levels...</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="tab-inventory" class="tab-content hidden space-y-4">
-        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-          <h2 class="text-xl font-black">Spare Parts Registration & Inventory</h2>
-          <div class="flex gap-2">
-            <input type="text" id="p-search" oninput="renderStockTable()" placeholder="Search spare parts..." class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none w-48">
-            <button onclick="toggleModal('product-modal', true)" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition shadow-sm">+ Add New Part</button>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
-                  <th class="p-4">SKU / Code</th>
-                  <th class="p-4">Spare Part Name</th>
-                  <th class="p-4 text-right">Cost Price</th>
-                  <th class="p-4 text-right">Selling Price</th>
-                  <th class="p-4 text-right">Profit / Unit</th>
-                  <th class="p-4 text-center">Available Stock</th>
-                  <th class="p-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="stock-table-body" class="divide-y divide-slate-50 text-slate-700">
-                </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section id="tab-invoicing" class="tab-content hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-          <h2 class="text-lg font-black text-slate-800 border-b pb-2">Generate Smart Invoice</h2>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1">Customer Name / Co.</label>
-              <input type="text" id="inv-customer" placeholder="Walk-in Customer" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1">Invoice Date</label>
-              <input type="date" id="inv-date" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs">
-            </div>
-          </div>
-
-          <div class="bg-slate-50 p-4 rounded-xl space-y-2">
-            <p class="text-xs font-bold text-slate-600">Select Item & Quantity</p>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <select id="inv-item-select" class="sm:col-span-2 px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs">
-                </select>
-              <div class="flex gap-2">
-                <input type="number" id="inv-item-qty" value="1" min="1" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs text-center font-bold">
-                <button onclick="addItemToDraft()" class="bg-slate-800 text-white px-4 rounded-xl text-xs font-bold hover:bg-slate-900 transition">Add</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="border rounded-xl overflow-hidden mt-3 text-xs">
-            <table class="w-full border-collapse">
-              <thead>
-                <tr class="bg-slate-50 text-slate-500 border-b font-bold">
-                  <th class="p-3">Part Details</th>
-                  <th class="p-3 text-right">Unit Selling</th>
-                  <th class="p-3 text-center">Qty</th>
-                  <th class="p-3 text-right">Total (LKR)</th>
-                  <th class="p-3 text-center">Remove</th>
-                </tr>
-              </thead>
-              <tbody id="draft-items-body" class="divide-y">
-                </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between space-y-6">
-          <div>
-            <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider mb-4">Invoice Summary</h3>
-            <div class="space-y-3 text-xs">
-              <div class="flex justify-between text-slate-500"><span>Sub Total</span><span id="sum-subtotal">0.00</span></div>
-              <div class="flex justify-between text-emerald-600 font-bold"><span>Total Expected Profit</span><span id="sum-profit">0.00</span></div>
-              <hr class="border-dashed">
-              <div class="flex justify-between items-baseline pt-2">
-                <span class="text-sm font-bold text-slate-700">Grand Total</span>
-                <span id="sum-total" class="text-3xl font-black text-blue-600">LKR 0.00</span>
-              </div>
-            </div>
-
-            <div class="mt-6 border-t pt-4">
-              <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">📎 Upload Bank Payment Slip (Optional)</label>
-              <label class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-slate-50 rounded-xl cursor-pointer transition">
-                <div class="text-center p-4">
-                  <p class="text-xs text-slate-500 font-bold">Click to attach Slip Image</p>
-                  <p id="slip-name-display" class="text-[11px] text-blue-600 font-bold mt-1 truncate max-w-xs"></p>
-                </div>
-                <input type="file" id="slip-file-input" accept="image/*" class="hidden" onchange="processSlipImage(event)">
-              </label>
-            </div>
-          </div>
-
-          <button onclick="commitInvoiceToCloud()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-600/10 transition flex justify-center items-center space-x-2 text-xs">
-            <span>🚀 Complete & Save Invoice (Update Stock)</span>
-          </button>
-        </div>
-      </section>
-
-      <section id="tab-history" class="tab-content hidden space-y-4">
-        <h2 class="text-xl font-black">Accounts Ledger & Slips</h2>
-        
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
-                  <th class="p-4">Invoice No</th>
-                  <th class="p-4">Date</th>
-                  <th class="p-4">Customer</th>
-                  <th class="p-4 text-right">Grand Total</th>
-                  <th class="p-4 text-right">Net Profit</th>
-                  <th class="p-4 text-center">Bank Slip</th>
-                  <th class="p-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="history-table-body" class="divide-y divide-slate-50 text-slate-700">
-                </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <div id="product-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden grid place-items-center p-4">
-    <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-sm font-black uppercase tracking-wider">Add Spare Part to Stock</h3>
-        <button onclick="toggleModal('product-modal', false)" class="text-slate-400 font-bold hover:text-slate-600">✕</button>
-      </div>
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-slate-500 mb-1">Part Name / Model / Brand</label>
-          <input type="text" id="modal-p-name" placeholder="e.g., Toyota Oil Filter C-110" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div>
-          <label class="block font-bold text-slate-500 mb-1">Item Custom Code / SKU</label>
-          <input type="text" id="modal-p-code" placeholder="e.g., LENG-9981" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-500 mb-1">Cost Price (LKR)</label>
-            <input type="number" id="modal-p-cost" placeholder="0.00" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-500 mb-1">Selling Price (LKR)</label>
-            <input type="number" id="modal-p-selling" placeholder="0.00" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-          </div>
-        </div>
-        <div>
-          <label class="block font-bold text-slate-500 mb-1">Initial Stock Level (Qty)</label>
-          <input type="number" id="modal-p-qty" placeholder="50" class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-      </div>
-      <div class="flex justify-end space-x-2 pt-2 text-xs">
-        <button onclick="toggleModal('product-modal', false)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-600">Cancel</button>
-        <button onclick="saveSparePartCloud()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white shadow-md shadow-blue-600/10">Add to Cloud Stock</button>
+  <div class="app">
+    <div class="aside">
+      <div class="brand-title">LUCKY ENGINEERING</div>
+      <div class="nav-group">
+        <div class="nav-item active" onclick="showPane('dashboard')">📊 Dashboard</div>
+        <div class="nav-item" onclick="showPane('customers')">👥 Customers</div>
+        <div class="nav-item" onclick="showPane('stock')">📦 Stock Inventory</div>
+        <div class="nav-item" onclick="showPane('invoices')">📝 Invoices</div>
+        <div class="nav-item" onclick="showPane('quotations')">📄 Quotations</div>
+        <div class="nav-item" onclick="showPane('payments')">💵 Payments & Receipts</div>
+        <div class="nav-item" onclick="showPane('purchases')">🛒 Purchases</div>
+        <div class="nav-item" onclick="showPane('expenses')">📉 Expenses</div>
+        <div class="nav-item" onclick="showPane('bankslips')">📎 Bank Slips</div>
+        <div class="nav-item" onclick="showPane('profit')">💰 Profit Summary</div>
+        <div class="nav-item" onclick="showPane('reports')">📈 Reports & Ledger</div>
       </div>
     </div>
+
+    <div class="main">
+      
+      <div id="pane-dashboard" class="pane active">
+        <div class="grid-3">
+          <div class="card"><h4>Total Stock Value</h4><h2 id="mStockValue">LKR 0.00</h2></div>
+          <div class="card"><h4>Paid Sales Revenue</h4><h2 id="mSales" style="color:var(--green)">LKR 0.00</h2></div>
+          <div class="card"><h4>Outstanding Balance</h4><h2 id="mDue" style="color:var(--red)">LKR 0.00</h2></div>
+        </div>
+        <br>
+        <div class="card">
+          <h4>⚠️ Low Stock Alert Profile</h4>
+          <div id="lowStock">Loading alerts...</div>
+        </div>
+      </div>
+
+      <div id="pane-stock" class="pane">
+        <div class="card">
+          <div style="display:flex; justify-between; align-items:center; margin-bottom:15px;">
+            <h3>Spare Parts Stock Management</h3>
+            <button class="btn" onclick="openProductModal()">+ Add New Spare Part</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Code</th><th>Part Name</th><th>Cost Price</th><th>Selling Price</th><th>Qty</th></tr>
+            </thead>
+            <tbody id="stockTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      </div>
   </div>
+
+  <script>
+    // Embedded with your exact credentials provided
+    const SUPABASE_URL = "https://kvzozqljwucqbqkvhsqo.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_vnP8fXOE-UIevlvoW_Q9Pg_JDDvYAGA";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let state = { customers: [], products: [], invoices: [], quotations: [], payments: [], purchases: [], expenses: [], bank_slips: [] };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await reloadAllCloudData();
+    });
+
+    async function reloadAllCloudData() {
+      try {
+        let { data: cust } = await supabaseClient.from('customers').select('*');
+        let { data: prod } = await supabaseClient.from('products').select('*');
+        let { data: inv } = await supabaseClient.from('invoices').select('*, invoice_items(*)');
+        let { data: pay } = await supabaseClient.from('payments').select('*');
+        let { data: exp } = await supabaseClient.from('expenses').select('*');
+        let { data: slips } = await supabaseClient.from('bank_slips').select('*');
+
+        state.customers = cust || [];
+        state.products = prod || [];
+        state.invoices = inv || [];
+        state.payments = pay || [];
+        state.expenses = exp || [];
+        state.bank_slips = slips || [];
+
+        renderDashboardMetrics();
+        renderStockTableData();
+      } catch (x) {
+        console.error("Cloud Refresh Issue: ", x);
+      }
+    }
+
+    function showPane(paneId) {
+      document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      
+      document.getElementById(`pane-${paneId}`).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function renderDashboardMetrics() {
+      let stockVal = state.products.reduce((s, p) => s + (Number(p.cost_price)*Number(p.quantity)), 0);
+      let paidSales = state.invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + Number(i.total), 0);
+      let outstanding = state.invoices.reduce((s, i) => s + Number(i.balance), 0);
+
+      document.getElementById('mStockValue').innerText = "LKR " + stockVal.toLocaleString();
+      document.getElementById('mSales').innerText = "LKR " + paidSales.toLocaleString();
+      document.getElementById('mDue').innerText = "LKR " + outstanding.toLocaleString();
+    }
+
+    function renderStockTableData() {
+      const out = document.getElementById('stockTableBody');
+      if(!out) return;
+      out.innerHTML = state.products.map(p => `
+        <tr>
+          <td><b>${p.code}</b></td>
+          <td>${p.name}</td>
+          <td>LKR ${Number(p.cost_price).toLocaleString()}</td>
+          <td style="color:var(--blue); font-weight:700">LKR ${Number(p.selling_price).toLocaleString()}</td>
+          <td>${p.quantity}</td>
+        </tr>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
