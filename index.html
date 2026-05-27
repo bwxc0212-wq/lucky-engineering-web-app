@@ -1062,6 +1062,17 @@
         </div>
       </div>
 
+      <div class="card soft-card no-print" style="margin-top:15px">
+        <div class="toolbar"><h3 style="margin:0">Edit Dashboard Values</h3><span class="muted">Blank fields use automatic database values</span></div>
+        <div class="grid grid-4">
+          <div><label>Customers</label><input id="dashCustomersEdit" type="number" placeholder="Auto"></div>
+          <div><label>Stock Value</label><input id="dashStockEdit" type="number" placeholder="Auto"></div>
+          <div><label>Paid Sales</label><input id="dashSalesEdit" type="number" placeholder="Auto"></div>
+          <div><label>Outstanding</label><input id="dashDueEdit" type="number" placeholder="Auto"></div>
+        </div>
+        <div class="actions" style="margin-top:12px"><button class="green" onclick="saveDashboardEdits()">Save Dashboard</button><button class="secondary" onclick="resetDashboardEdits()">Reset Auto Values</button></div>
+      </div>
+
       <div class="grid grid-2" style="margin-top:15px">
         <div class="card"><h3>Low Stock Alerts</h3><div id="lowStock"></div></div>
         <div class="card"><h3>Recent Invoices</h3><div class="table-wrap"><table><thead><tr><th>No</th><th>Customer</th><th class="right">Total</th><th>Status</th></tr></thead><tbody id="recentInvoices"></tbody></table></div></div>
@@ -1347,15 +1358,15 @@
       </div>
       <div class="grid grid-2" style="margin-top:15px">
         <div class="card">
-          <h3>Add Expense / Income</h3>
+          <h3 id="txFormTitle">Add Expense / Income</h3>
           <label>Type</label><select id="txType"><option>Expense</option><option>Income</option></select>
           <label>Category</label><input id="txCategory" placeholder="Transport, Salary, Repair, Parts...">
           <label>Description</label><textarea id="txDescription"></textarea>
           <label>Amount</label><input id="txAmount" type="number">
           <label>Date</label><input id="txDate" type="date">
-          <button class="green" style="margin-top:12px" onclick="saveTransaction()">Save Transaction</button>
+          <div class="actions" style="margin-top:12px"><button class="green" onclick="saveTransaction()">Save Transaction</button><button class="secondary" onclick="resetTransactionForm()">New / Clear</button></div>
         </div>
-        <div class="card"><h3>Transactions</h3><div class="table-wrap" style="max-height:380px"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th class="right">Amount</th><th></th></tr></thead><tbody id="txRows"></tbody></table></div></div>
+        <div class="card"><h3>Transactions</h3><div class="table-wrap" style="max-height:380px"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th class="right">Amount</th><th>Action</th></tr></thead><tbody id="txRows"></tbody></table></div></div>
       </div>
     </section>
 
@@ -1394,6 +1405,8 @@ let state = { customers:[], products:[], invoices:[], invoiceItems:[], transacti
 let invoice = { no:"", customer_id:"", invoice_date:today(), due_date:today(), paid_amount:0, invoice_discount:0, items:[] };
 let quotation = { no:"", customer_id:"", quotation_date:today(), valid_until:today(), discount:0, status:"Draft", items:[] };
 let receipt = { no:"", invoice_id:"", payment_date:today(), amount:0, method:"Cash", note:"Payment received with thanks." };
+let editingTransactionId = "";
+let dashboardOverrides = JSON.parse(localStorage.getItem("dashboardOverrides") || "{}");
 
 function today() { return new Date().toISOString().slice(0,10); }
 function money(n) { return Number(n||0).toLocaleString("en-LK", {minimumFractionDigits:2, maximumFractionDigits:2}); }
@@ -1679,11 +1692,40 @@ function loadInvoice(id) {
 
 async function saveTransaction() {
   const row={type:txType.value, category:txCategory.value, description:txDescription.value, amount:Number(txAmount.value||0), transaction_date:txDate.value||today()};
-  if(!row.category || !row.amount) return alert("Category and amount are required.");
-  await api(()=>db.from("transactions").insert(row));
-  txCategory.value=txDescription.value=txAmount.value=""; txDate.value=today(); await loadAll();
+  if(!row.category) return alert("Category is required.");
+  if(!row.amount) return alert("Amount is required.");
+  if(editingTransactionId) {
+    await api(()=>db.from("transactions").update(row).eq("id", editingTransactionId));
+    showToast("Transaction updated.");
+  } else {
+    await api(()=>db.from("transactions").insert(row));
+    showToast("Transaction saved.");
+  }
+  resetTransactionForm();
+  await loadAll();
 }
-async function deleteTransaction(id) { if(confirm("Delete transaction?")) { await api(()=>db.from("transactions").delete().eq("id",id)); await loadAll(); } }
+function editTransaction(id) {
+  const t = state.transactions.find(x=>x.id===id);
+  if(!t) return;
+  editingTransactionId = id;
+  txType.value = t.type || "Expense";
+  txCategory.value = t.category || "";
+  txDescription.value = t.description || "";
+  txAmount.value = Number(t.amount || 0);
+  txDate.value = t.transaction_date || today();
+  if (typeof txFormTitle !== "undefined") txFormTitle.textContent = "Edit Expense / Income";
+  txCategory.focus();
+}
+function resetTransactionForm() {
+  editingTransactionId = "";
+  txType.value = "Expense";
+  txCategory.value = "";
+  txDescription.value = "";
+  txAmount.value = "";
+  txDate.value = today();
+  if (typeof txFormTitle !== "undefined") txFormTitle.textContent = "Add Expense / Income";
+}
+async function deleteTransaction(id) { if(confirm("Delete transaction?")) { await api(()=>db.from("transactions").delete().eq("id",id)); resetTransactionForm(); await loadAll(); } }
 function renderAccounts() {
   const invoiceIncome = state.invoices.reduce((s,inv)=>s+Number(inv.paid_amount||0),0);
   const txIncome = state.transactions.filter(t=>t.type==="Income" && t.category !== "Invoice Payment").reduce((s,t)=>s+Number(t.amount||0),0);
@@ -1695,7 +1737,7 @@ function renderAccounts() {
   if (typeof accTodayNetProfit !== "undefined") accTodayNetProfit.textContent = money(todayProfit.netProfit);
   if (typeof accMonthGrossProfit !== "undefined") accMonthGrossProfit.textContent = money(monthProfit.grossProfit);
   if (typeof accMonthNetProfit !== "undefined") accMonthNetProfit.textContent = money(monthProfit.netProfit);
-  txRows.innerHTML = state.transactions.map(t=>`<tr><td>${html(t.transaction_date)}</td><td>${html(t.type)}</td><td>${html(t.category)}</td><td class="right">${money(t.amount)}</td><td><button class="red" onclick="deleteTransaction('${t.id}')">Delete</button></td></tr>`).join("") || `<tr><td colspan="5" class="center">No transactions</td></tr>`;
+  txRows.innerHTML = state.transactions.map(t=>`<tr><td>${html(t.transaction_date)}</td><td>${html(t.type)}</td><td>${html(t.category)}</td><td>${html(t.description||"")}</td><td class="right">${money(t.amount)}</td><td class="actions"><button class="secondary" onclick="editTransaction('${t.id}')">Edit</button><button class="red" onclick="deleteTransaction('${t.id}')">Delete</button></td></tr>`).join("") || `<tr><td colspan="6" class="center">No transactions</td></tr>`;
 }
 
 function openUser(id="") {
@@ -2466,11 +2508,39 @@ function renderBankSlips() {
   bankSlipRows.innerHTML = state.bankSlips.map(s => `<tr><td>${html((s.uploaded_at || "").slice(0,10))}</td><td>${html(s.invoice_numbers || "")}</td><td>${html(s.reference || "")}</td><td class="right">${money(s.amount)}</td><td>${s.file_data ? `<a href="${s.file_data}" download="${html(s.file_name || "slip")}" target="_blank">Open</a>` : ""}</td></tr>`).join("") || `<tr><td colspan="5" class="center">No bank slips uploaded</td></tr>`;
 }
 
+function dashboardValue(key, autoValue) {
+  const saved = dashboardOverrides && dashboardOverrides[key];
+  return saved === "" || saved === undefined || saved === null ? autoValue : Number(saved || 0);
+}
+function syncDashboardEditInputs() {
+  if (typeof dashCustomersEdit === "undefined") return;
+  dashCustomersEdit.value = dashboardOverrides.customers ?? "";
+  dashStockEdit.value = dashboardOverrides.stockValue ?? "";
+  dashSalesEdit.value = dashboardOverrides.sales ?? "";
+  dashDueEdit.value = dashboardOverrides.due ?? "";
+}
+function saveDashboardEdits() {
+  dashboardOverrides = {customers: dashCustomersEdit.value, stockValue: dashStockEdit.value, sales: dashSalesEdit.value, due: dashDueEdit.value};
+  localStorage.setItem("dashboardOverrides", JSON.stringify(dashboardOverrides));
+  renderDashboard();
+  showToast("Dashboard values saved on this browser.");
+}
+function resetDashboardEdits() {
+  dashboardOverrides = {};
+  localStorage.removeItem("dashboardOverrides");
+  renderDashboard();
+  showToast("Dashboard reset to automatic values.");
+}
 function renderDashboard() {
-  mCustomers.textContent=state.customers.length;
-  mStockValue.textContent=money(state.products.reduce((s,p)=>s+Number(p.cost_price||0)*Number(p.quantity||0),0));
-  mSales.textContent=money(state.invoices.reduce((s,i)=>s+Number(i.total||0),0));
-  mDue.textContent=money(state.invoices.reduce((s,i)=>s+Math.max(0,Number(i.balance||0)),0));
+  const autoCustomers = state.customers.length;
+  const autoStockValue = state.products.reduce((s,p)=>s+Number(p.cost_price||0)*Number(p.quantity||0),0);
+  const autoSales = state.invoices.reduce((s,i)=>s+Number(i.paid_amount||0),0);
+  const autoDue = state.invoices.reduce((s,i)=>s+Math.max(0,Number(i.balance||0)),0);
+  mCustomers.textContent=dashboardValue("customers", autoCustomers);
+  mStockValue.textContent=money(dashboardValue("stockValue", autoStockValue));
+  mSales.textContent=money(dashboardValue("sales", autoSales));
+  mDue.textContent=money(dashboardValue("due", autoDue));
+  syncDashboardEditInputs();
   const lows=state.products.filter(p=>Number(p.quantity)<=Number(p.min_quantity));
   lowStock.innerHTML = lows.length ? lows.map(p=>`<div><b>${html(p.code)}</b> - ${html(p.name)}: <span class="low">${p.quantity}</span> left</div>`).join("") : `<span class="muted">No low stock items.</span>`;
   recentInvoices.innerHTML = state.invoices.slice(0,6).map(inv=>{ const c=state.customers.find(x=>x.id===inv.customer_id)||{}; return `<tr><td>${html(inv.invoice_no)}</td><td>${html(c.name||"")}</td><td class="right">${money(inv.total)}</td><td>${badge(inv.status)}</td></tr>`; }).join("") || `<tr><td colspan="4" class="center">No invoices</td></tr>`;
